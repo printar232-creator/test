@@ -1,147 +1,330 @@
 import streamlit as st
 
-# ตั้งค่าหน้าเว็บ
 st.set_page_config(
     page_title="ASIAN MINERAL RESOURCES CO., LTD.",
     layout="wide"
 )
 
-# โหลด CSS
-with open("assets/style.css", "r", encoding="utf-8") as f:
-    css = f.read()
+# ======================
+# CSS STYLE
+# ======================
 
-st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
+st.markdown("""
+<style>
 
-# HTML Content
-html_content = """
-<header>
+html, body, [class*="css"]  {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f4f6f9;
+}
+
+/* remove streamlit top padding */
+.block-container {
+    padding-top: 0rem;
+    padding-left: 0rem;
+    padding-right: 0rem;
+}
+
+/* HEADER */
+.header {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    padding: 60px 20px;
+    text-align: center;
+    color: white;
+}
+
+.header h1 {
+    font-size: 48px;
+    margin-bottom: 10px;
+}
+
+.header p {
+    font-size: 20px;
+    opacity: 0.9;
+}
+
+/* NAVBAR */
+.navbar {
+    background-color: #1f1f1f;
+    padding: 15px;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 999;
+}
+
+.navbar a {
+    color: white;
+    text-decoration: none;
+    margin: 0 15px;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+/* SECTION */
+.section {
+    background: white;
+    margin: 30px auto;
+    padding: 40px;
+    border-radius: 14px;
+    max-width: 1200px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+}
+
+.section-title {
+    color: #1e3c72;
+    font-size: 32px;
+    margin-bottom: 25px;
+    border-bottom: 3px solid #2a5298;
+    padding-bottom: 10px;
+}
+
+/* CARD */
+.card {
+    background: #f4f7fc;
+    padding: 25px;
+    border-radius: 10px;
+    border-left: 6px solid #2a5298;
+    height: 100%;
+}
+
+.card h3 {
+    color: #1e3c72;
+}
+
+/* HIGHLIGHT */
+.highlight {
+    background: #eef3fc;
+    padding: 25px;
+    border-radius: 10px;
+    border: 1px solid #bfd2f2;
+}
+
+/* PARTNER */
+.partner {
+    background: #ececec;
+    padding: 10px 18px;
+    border-radius: 25px;
+    display: inline-block;
+    margin: 6px;
+    font-weight: 500;
+}
+
+/* FOOTER */
+.footer {
+    background: #222;
+    color: #ccc;
+    text-align: center;
+    padding: 30px;
+    margin-top: 50px;
+}
+
+/* MOBILE */
+@media(max-width:768px){
+
+    .header h1{
+        font-size:32px;
+    }
+
+    .section{
+        padding:20px;
+        margin:15px;
+    }
+
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+# ======================
+# HEADER
+# ======================
+
+st.markdown("""
+<div class="header">
     <h1>บริษัท เอเซี่ยน มินเนอรัล รีซอสเซส จำกัด</h1>
     <p>ASIAN MINERAL RESOURCES CO., LTD.</p>
-</header>
+</div>
+""", unsafe_allow_html=True)
 
-<nav>
+# ======================
+# NAVBAR
+# ======================
+
+st.markdown("""
+<div class="navbar">
     <a href="#about">เกี่ยวกับเรา</a>
-    <a href="#strengths">จุดแข็งของเรา</a>
+    <a href="#strengths">จุดแข็ง</a>
     <a href="#products">ผลิตภัณฑ์</a>
-    <a href="#partners">พันธมิตรระดับโลก</a>
-</nav>
+    <a href="#partners">พันธมิตร</a>
+</div>
+""", unsafe_allow_html=True)
 
-<div class="container">
+# ======================
+# ABOUT
+# ======================
 
-    <div id="about" class="section">
-        <h2 class="section-title">เกี่ยวกับเรา (About Us)</h2>
+st.markdown('<div id="about" class="section">', unsafe_allow_html=True)
 
-        <div class="grid-2">
+st.markdown("""
+<div class="section-title">
+เกี่ยวกับเรา (About Us)
+</div>
+""", unsafe_allow_html=True)
 
-            <div>
-                <p style="margin-bottom: 15px; text-indent: 30px;">
-                    บริษัท เอเซี่ยน มินเนอรัล รีซอสเซส จำกัด ก่อตั้งขึ้นในปี พ.ศ. 2527
-                    ด้วยความมุ่งมั่นในการดำเนินธุรกิจหลักด้านการทำเหมืองแร่
-                    แต่งแร่ และประมวลผลแร่อุตสาหกรรมที่มีคุณภาพสูง
-                </p>
+col1, col2 = st.columns([2,1])
 
-                <p style="text-indent: 30px;">
-                    ตลอดระยะเวลากว่า 35 ปีในอุตสาหกรรม บริษัทฯ ได้เติบโตอย่างต่อเนื่อง
-                    และมั่นคง มีชื่อเสียงเป็นที่ยอมรับอย่างกว้างขวาง
-                </p>
-            </div>
+with col1:
+    st.write("""
+บริษัท เอเซี่ยน มินเนอรัล รีซอสเซส จำกัด ก่อตั้งขึ้นในปี พ.ศ. 2527
+ดำเนินธุรกิจด้านการทำเหมืองแร่ แต่งแร่ และแปรรูปแร่อุตสาหกรรมคุณภาพสูง
+เพื่อรองรับทั้งตลาดในประเทศและต่างประเทศ
 
-            <div>
-                <div class="highlight-box">
-                    <strong>🎖️ การรับรองและความภาคภูมิใจ</strong>
+ตลอดระยะเวลากว่า 35 ปี บริษัทได้รับความเชื่อมั่นจากลูกค้าระดับสากล
+ด้วยมาตรฐานคุณภาพและความซื่อสัตย์ในการดำเนินธุรกิจ
+""")
 
-                    <ul style="margin-top: 10px; padding-left: 20px;">
-                        <li>ได้รับการส่งเสริมการลงทุนจาก BOI</li>
-                        <li>ได้รับใบอนุญาตแต่งแร่อย่างถูกต้อง</li>
-                        <li>เป็นผู้ส่งออกแร่แบร์ไรต์คุณภาพสูง</li>
-                    </ul>
-                </div>
-            </div>
+with col2:
+    st.markdown("""
+    <div class="highlight">
+    <h4>🎖️ การรับรอง</h4>
 
-        </div>
+    <ul>
+        <li>ได้รับ BOI</li>
+        <li>ใบอนุญาตแต่งแร่ถูกต้อง</li>
+        <li>ผู้ส่งออกแร่คุณภาพสูง</li>
+    </ul>
     </div>
+    """, unsafe_allow_html=True)
 
-    <div id="strengths" class="section">
+st.markdown("</div>", unsafe_allow_html=True)
 
-        <h2 class="section-title">จุดแข็งและศักยภาพของบริษัท</h2>
+# ======================
+# STRENGTHS
+# ======================
 
-        <div class="grid-2">
+st.markdown('<div id="strengths" class="section">', unsafe_allow_html=True)
 
-            <div class="factory-info">
-                <h3>🏭 ความเป็นเลิศทางการผลิตและโครงสร้างพื้นฐาน</h3>
+st.markdown("""
+<div class="section-title">
+จุดแข็งและศักยภาพ
+</div>
+""", unsafe_allow_html=True)
 
-                <ul>
-                    <li>เทคโนโลยีทันสมัย</li>
-                    <li>ระบบโรงงานมาตรฐาน</li>
-                    <li>ลานตากแร่ขนาดใหญ่</li>
-                    <li>ทีมงานมืออาชีพ</li>
-                </ul>
-            </div>
+col1, col2 = st.columns(2)
 
-            <div>
-                <h3>🌐 ความมั่นคงด้านวัตถุดิบและการตลาด</h3>
+with col1:
 
-                <p>
-                    บริษัทมีฐานการตลาดแข็งแกร่ง
-                    ส่งออกสินค้าไปยังต่างประเทศทั่วโลก
-                </p>
-            </div>
+    st.markdown("""
+    <div class="card">
+    <h3>🏭 โรงงานและการผลิต</h3>
 
-        </div>
-
-    </div>
-
-    <div id="products" class="section">
-
-        <h2 class="section-title">ผลิตภัณฑ์หลัก (Our Products)</h2>
-
-        <div class="grid-4">
-
-            <div class="card">
-                <h3>1. BARYTES</h3>
-                <p>แร่แบร์ไรต์คุณภาพสูง</p>
-            </div>
-
-            <div class="card">
-                <h3>2. TALC POWDER</h3>
-                <p>ผงทัลคัมเกรดพรีเมียม</p>
-            </div>
-
-            <div class="card">
-                <h3>3. DOLOMITE</h3>
-                <p>ผงโดโลไมต์คุณภาพสูง</p>
-            </div>
-
-            <div class="card">
-                <h3>4. CALCIUM CARBONATE</h3>
-                <p>แคลเซียมคาร์บอเนตเกรดแปรรูป</p>
-            </div>
-
-        </div>
+    <ul>
+        <li>เครื่องจักรทันสมัย</li>
+        <li>ระบบโรงงานมาตรฐาน</li>
+        <li>ลานตากแร่ขนาดใหญ่</li>
+        <li>ทีมงานมืออาชีพ</li>
+    </ul>
 
     </div>
+    """, unsafe_allow_html=True)
 
-    <div id="partners" class="section">
+with col2:
 
-        <h2 class="section-title">พันธมิตรระดับโลก</h2>
+    st.markdown("""
+    <div class="card">
+    <h3>🌏 การตลาดและวัตถุดิบ</h3>
 
-        <div class="partner-list">
-            <span class="partner-item">JOTUN</span>
-            <span class="partner-item">AKZO NOBEL</span>
-            <span class="partner-item">SHELL</span>
-            <span class="partner-item">PETRONAS</span>
-            <span class="partner-item">BRENTAG</span>
-        </div>
+    <p>
+    มีแหล่งวัตถุดิบจากหลายประเทศ
+    และส่งออกสินค้ากว่า 70%
+    ไปยังตลาดทั่วโลก
+    </p>
 
     </div>
+    """, unsafe_allow_html=True)
+
+st.markdown("</div>", unsafe_allow_html=True)
+
+# ======================
+# PRODUCTS
+# ======================
+
+st.markdown('<div id="products" class="section">', unsafe_allow_html=True)
+
+st.markdown("""
+<div class="section-title">
+ผลิตภัณฑ์หลัก
+</div>
+""", unsafe_allow_html=True)
+
+col1, col2, col3, col4 = st.columns(4)
+
+products = [
+    ("BARYTES", "แร่แบร์ไรต์คุณภาพสูง"),
+    ("TALC POWDER", "ผงทัลคัมเกรดพรีเมียม"),
+    ("DOLOMITE", "โดโลไมต์คุณภาพสูง"),
+    ("CALCIUM CARBONATE", "แคลเซียมคาร์บอเนต")
+]
+
+cols = [col1, col2, col3, col4]
+
+for col, product in zip(cols, products):
+
+    with col:
+        st.markdown(f"""
+        <div class="card">
+            <h3>{product[0]}</h3>
+            <p>{product[1]}</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+st.markdown("</div>", unsafe_allow_html=True)
+
+# ======================
+# PARTNERS
+# ======================
+
+st.markdown('<div id="partners" class="section">', unsafe_allow_html=True)
+
+st.markdown("""
+<div class="section-title">
+พันธมิตรระดับโลก
+</div>
+""", unsafe_allow_html=True)
+
+partners = [
+    "JOTUN",
+    "AKZO NOBEL",
+    "SHELL",
+    "PETRONAS",
+    "BRENTAG",
+    "OMYA",
+    "CHEVRON"
+]
+
+partner_html = ""
+
+for p in partners:
+    partner_html += f'<span class="partner">{p}</span>'
+
+st.markdown(partner_html, unsafe_allow_html=True)
+
+st.markdown("</div>", unsafe_allow_html=True)
+
+# ======================
+# FOOTER
+# ======================
+
+st.markdown("""
+<div class="footer">
+
+<p>
+บริษัท เอเซี่ยน มินเนอรัล รีซอสเซส จำกัด
+</p>
+
+<p>
+สำนักงานใหญ่ กรุงเทพมหานคร
+</p>
 
 </div>
-
-<footer>
-    <p>
-        &copy; บริษัท เอเซี่ยน มินเนอรัล รีซอสเซส จำกัด
-    </p>
-</footer>
-"""
-
-st.markdown(html_content, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
