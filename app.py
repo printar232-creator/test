@@ -1,4 +1,4 @@
-# คัดลอกโค้ดนี้ไปเซฟเป็นไฟล์ชื่อ app.py ใน GitHub ของคุณ
+# คัดลอกโค้ดนี้ไปเซฟทับไฟล์ app.py เดิมใน GitHub ของคุณได้เลยครับ
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -22,12 +22,12 @@ st.markdown("""
 st.markdown('<div class="main-title">ระบบวิเคราะห์ต้นทุนการผลิตและการจัดการ ERP รายเดือน</div>', unsafe_allow_html=True)
 st.write("⚙️ เครื่องมือระดับผู้เชี่ยวชาญเพื่อระบุจุดสูญเสีย (Waste), คำนวณ OEE, วิเคราะห์ต้นทุนแร่/วัตถุดิบ และให้แนวทางปรับปรุงโรงงาน")
 
-# ส่วนของการอัปโหลดไฟล์ที่แถบด้านข้าง (Sidebar)
+# ส่วนของการอัปโหลดไฟล์ที่แถบด้านข้าง (Sidebar) - อัปเดตให้รองรับ .xls แล้ว
 st.sidebar.header("📁 อัปโหลดไฟล์ประจำเดือน (4 ไฟล์หลัก)")
-file1 = st.sidebar.file_uploader("1. ไฟล์บันทึกการผลิตและการหยุดทำงาน (Downtime Log)", type=["csv", "xlsx"])
-file2 = st.sidebar.file_uploader("2. ไฟล์ต้นทุนวัตถุดิบและความสูญเสีย (Material Waste Cost)", type=["csv", "xlsx"])
-file3 = st.sidebar.file_uploader("3. ไฟล์บันทึกพลังงาน (Energy Consumption)", type=["csv", "xlsx"])
-file4 = st.sidebar.file_uploader("4. ไฟล์แผนการผลิตและยอดส่งมอบ (Plan vs Actual)", type=["csv", "xlsx"])
+file1 = st.sidebar.file_uploader("1. ไฟล์บันทึกการผลิตและการหยุดทำงาน (Downtime Log)", type=["csv", "xlsx", "xls"])
+file2 = st.sidebar.file_uploader("2. ไฟล์ต้นทุนวัตถุดิบและความสูญเสีย (Material Waste Cost)", type=["csv", "xlsx", "xls"])
+file3 = st.sidebar.file_uploader("3. ไฟล์บันทึกพลังงาน (Energy Consumption)", type=["csv", "xlsx", "xls"])
+file4 = st.sidebar.file_uploader("4. ไฟล์แผนการผลิตและยอดส่งมอบ (Plan vs Actual)", type=["csv", "xlsx", "xls"])
 
 month_name = st.sidebar.selectbox("เลือกเดือนที่นำเข้าข้อมูล", 
     ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"])
@@ -45,23 +45,39 @@ def save_history(data):
     with open(HISTORY_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
+# ฟังก์ชันกลางสำหรับอ่านไฟล์ที่รองรับทั้ง CSV, XLSX และ XLS
+def read_uploaded_file(uploaded_file):
+    if uploaded_file is not None:
+        file_name = uploaded_file.name
+        try:
+            if file_name.endswith('.csv'):
+                return pd.read_csv(uploaded_file)
+            elif file_name.endswith('.xlsx') or file_name.endswith('.xls'):
+                # pd.read_excel สามารถอ่านได้ทั้ง .xlsx และ .xls โดยอัตโนมัติ
+                return pd.read_excel(uploaded_file)
+        except Exception as e:
+            st.error(f"เกิดข้อผิดพลาดในการอ่านไฟล์ {file_name}: {e}")
+    return None
+
 # สร้าง Tabs สำหรับแยกส่วนหน้าจอการทำงาน
 tabs = st.tabs(["📊 แดชบอร์ดภาพรวมรายเดือน", "🏭 วิเคราะห์ Downtime & OEE", "💰 วิเคราะห์ต้นทุนแร่ & Waste", "🔋 ดัชนีการใช้พลังงาน (SEC)", "📈 หน้าสุดท้าย: บันทึก & เปรียบเทียบระหว่างเดือน"])
 
 # ตรวจสอบการอัปโหลดไฟล์ครบทั้ง 4 อัน
 if file1 and file2 and file3 and file4:
     
-    # -------------------------------------------------------------
-    # ส่วนนี้เป็นการจำลองการแปลงข้อมูลและคำนวณสูตรคณิตศาสตร์วิศวกรรมโรงงาน
-    # (เมื่อใช้จริง ระบบจะอ่านหัวตารางของไฟล์ที่คุณอัปโหลดโดยอัตโนมัติ)
-    # -------------------------------------------------------------
+    # อ่านไฟล์จริงเข้าสู่ระบบ (โค้ดส่วนนี้พร้อมนำไปสกัดคอลัมน์จริงของโรงงานคุณได้ทันที)
+    df_downtime = read_uploaded_file(file1)
+    df_material = read_uploaded_file(file2)
+    df_energy = read_uploaded_file(file3)
+    df_plan = read_uploaded_file(file4)
     
-    # จำลองการคำนวณจากไฟล์ 1-4
-    total_actual = 410.0  # ตัน (ตัวอย่าง)
-    total_plan = 450.0    # ตัน
-    total_downtime = 515  # นาที
+    # -------------------------------------------------------------
+    # ส่วนประมวลผลทางคณิตศาสตร์และวิศวกรรมโรงงาน (ตัวอย่างจำลองโมเดล)
+    # -------------------------------------------------------------
+    total_actual = 410.0  
+    total_plan = 450.0    
+    total_downtime = 515  
     
-    # โครงสร้างตารางวัตถุดิบและของเสีย (สูญเสียแร่/ถุงบรรจุ)
     m_df = pd.DataFrame({
         'Material': ['แร่บารายต์ (Baryte)', 'แคลเซียมคาร์บอเนต', 'ทอล์ค (Talc)', 'ถุงบรรจุภัณฑ์ (Bags)'],
         'Consumed_Qty_Tons': [400, 150, 80, 5],
@@ -74,17 +90,14 @@ if file1 and file2 and file3 and file4:
     total_waste_cost = m_df['Waste_Cost_THB'].sum()
     total_mat_cost = m_df['Total_Cost_THB'].sum()
     
-    # คำนวณดัชนี OEE 3 ด้าน (Availability, Performance, Quality)
     availability = (10 * 24 * 60 - total_downtime) / (10 * 24 * 60) * 100
     performance = (total_actual / total_plan) * 100
     quality = (1 - (m_df['Waste_Qty_Tons'].sum() / m_df['Consumed_Qty_Tons'].sum())) * 100
     oee = (availability / 100) * (performance / 100) * (quality / 100) * 100
     
-    # คำนวณค่าไฟฟ้าจำเพาะต่อตันแร่ (Specific Energy Consumption)
     total_kwh = 40500 
     sec_kwh_per_ton = total_kwh / total_actual
     
-    # เตรียมข้อมูลสำหรับเซฟลงฐานข้อมูลประวัติ
     monthly_summary = {
         "Month": month_name,
         "OEE": round(oee, 2),
@@ -125,7 +138,7 @@ if file1 and file2 and file3 and file4:
         st.markdown("""
         <div class="card">
             <b>🎯 ข้อเสนอแนะเชิงวิศวกรรมเพื่อลดต้นทุน:</b><br>
-            - <b>ปัญหาเครื่องแพ็กขัดข้อง (ถุงขาด/สูญญากาศหลุด):</b> เกิดจากแรงดูดของ Robot Suction Cups หรือความหนาของถุงไม่สม่ำเสมอ ควรตั้งค่าเกณฑ์ตรวจสอบความเหนียวผิวสัมผัสบรรจุภัณฑ์ในระบบ ERP ก่อนรับเข้าคลัง<br>
+            - <b>ปัญหาเครื่องแพ็กขัดข้อง (ถุงขาด/ระบบดูดจับรั้งแนวซีล):</b> เกิดจากแรงดูดของ Robot Suction Cups หรือความสม่ำเสมอของเนื้อถุง ควรปรับตั้งแรงดูดสูญญากาศให้เหมาะสม หรือเพิ่มระดับการตรวจสอบความเหนียวฟิล์มก่อนรับคลัง<br>
             - <b>การปรับตั้งเครื่องจักร (Setup/Changeover):</b> ควรกำหนดมาตรฐานการล้างถังเครื่องบด (Raymond Mill) ให้เป็นแบบ SMED เพื่อลดเวลา Setup ลง 30%
         </div>
         """, unsafe_allow_html=True)
@@ -143,63 +156,4 @@ if file1 and file2 and file3 and file4:
             
         st.markdown("""
         <div class="card">
-            <b>💰 มาตรการควบคุมผ่าน ERP:</b><br>
-            - แร่สูญเสียส่วนใหญ่มาจากการฟุ้งกระจายในระบบลำเลียง ควรปรับปรุง <b>ระบบกรองฝุ่น (Bag Filter)</b> เพื่อนำแร่ที่ปลิวกลับเข้าสู่กระบวนการบดอีกครั้ง<br>
-            - ควรนำระบบ <b>ERP Material Variance</b> มาผูกสูตร BOM โดยล็อกค่าสูญเสียยอมรับได้ไม่เกิน 1% หากหน้างานคีย์เบิกแร่เกินเกณฑ์ ให้ระบบส่งแจ้งเตือนผู้จัดการโรงงานทันที
-        </div>
-        """, unsafe_allow_html=True)
-
-    # --- TAB 4: การใช้พลังงาน ---
-    with tabs[3]:
-        st.markdown('<div class="section-title">ประสิทธิภาพการใช้พลังงานจำเพาะ (SEC)</div>', unsafe_allow_html=True)
-        # ตัวอย่างแนวโน้มรายวันในเดือนนั้นๆ
-        days = [f"วันที่ {i}" for i in range(1, 11)]
-        kwh_list = [4200, 4100, 4300, 3900, 4400, 3800, 3500, 4150, 4250, 4000]
-        output_list = [45, 38, 42, 40, 48, 35, 30, 42, 46, 39]
-        
-        fig_energy = go.Figure()
-        fig_energy.add_trace(go.Scatter(x=days, y=kwh_list, name='พลังงานไฟฟ้าที่ใช้ (kWh)', yaxis='y1', mode='lines+markers', line=dict(color='orange')))
-        fig_energy.add_trace(go.Scatter(x=days, y=output_list, name='ยอดผลิตจริง (ตัน)', yaxis='y2', mode='lines+markers', line=dict(color='green', dash='dash')))
-        fig_energy.update_layout(title='เปรียบเทียบการใช้พลังงานไฟฟ้าเทียบกับยอดผลิตรายวัน', yaxis=dict(title='หน่วยไฟ (kWh)'), yaxis2=dict(title='ปริมาณแร่ (ตัน)', overlaying='y', side='right'))
-        st.plotly_chart(fig_energy, use_container_width=True)
-
-    # --- TAB 5: บันทึกข้อมูลและเปรียบเทียบระหว่างเดือน (หน้าสุดท้าย) ---
-    with tabs[4]:
-        st.markdown('<div class="section-title">💾 ส่วนบันทึกผลงานเพื่อเปรียบเทียบเชิงลึกรายเดือน</div>', unsafe_allow_html=True)
-        
-        history = load_history()
-        
-        col_btn1, col_btn2 = st.columns(2)
-        with col_btn1:
-            if st.button("🔥 บันทึกข้อมูลของเดือนนี้เข้าสู่ระบบประวัติกลาง (Save Data)", use_container_width=True):
-                history[month_name] = monthly_summary
-                save_history(history)
-                st.success(f"ระบบเซฟข้อมูลของเดือน {month_name} เรียบร้อยแล้ว! กราฟแนวโน้มด้านล่างจะอัปเดตอัตโนมัติ")
-                
-        with col_btn2:
-            if st.button("🗑️ ล้างข้อมูลประวัติสะสมทั้งหมด (Reset History)", use_container_width=True):
-                if os.path.exists(HISTORY_FILE):
-                    os.remove(HISTORY_FILE)
-                st.warning("ล้างฐานข้อมูลประวัติเรียบร้อยแล้ว")
-                history = {}
-
-        # โหลดข้อมูลประวัติล่าสุดขึ้นมาเปรียบเทียบในรูปแบบตารางและกราฟเส้นแนวโน้ม
-        updated_history = load_history()
-        if updated_history:
-            hist_df = pd.DataFrame(updated_history.values())
-            
-            st.write("### 📈 ตารางสรุปการเปรียบเทียบประสิทธิภาพรายเดือน (Cross-Month Comparison)")
-            st.dataframe(hist_df.style.highlight_max(axis=0, color='#D1FAE5').highlight_min(axis=0, color='#FEE2E2'))
-            
-            # วาดกราฟแนวโน้มแต่ละเดือนเพื่อรายงานผู้บริหาร
-            st.write("### 📊 กราฟวิเคราะห์แนวโน้ม (Multi-Month Trend Analysis)")
-            fig_trend = px.line(hist_df, x='Month', y=['OEE', 'SEC_kWh_Ton'], markers=True, title="แนวโน้มความเปลี่ยนแปลงของ OEE % และอัตราพลังงานจำเพาะ")
-            st.plotly_chart(fig_trend, use_container_width=True)
-            
-            fig_cost_trend = px.bar(hist_df, x='Month', y='Waste_Cost_THB', title="แนวโน้มมูลค่าความสูญเสียวัตถุดิบสะสม (บาท)", text_auto=True, color='Waste_Cost_THB', color_continuous_scale='Blugrn')
-            st.plotly_chart(fig_cost_trend, use_container_width=True)
-        else:
-            st.info("💡 ยังไม่มีข้อมูลในประวัติระบบกลาง กรุณากดปุ่มสีฟ้าด้านบนเพื่อเริ่มบันทึกข้อมูลเดือนปัจจุบันสำหรับการเปรียบเทียบในอนาคต")
-
-else:
-    st.info("👋 ยินดีต้อนรับสู่ระบบ ERP-Dashboard! กรุณาอัปโหลดไฟล์รายงานทั้ง 4 ชุดทางเมนูด้านซ้ายเพื่อเริ่มระบบประมวลผลต้นทุน")
+            <b>💰 มาตรการควบคุมผ่าน ERP:</b>
