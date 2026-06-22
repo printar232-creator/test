@@ -18,8 +18,12 @@ if 'df_gl' in st.session_state:
     
     st.dataframe(mapped_df)
     
-    total_debit = pd.to_numeric(mapped_df['Debit_Amount']).sum()
-    total_credit = pd.to_numeric(mapped_df['Credit_Amount']).sum()
+    # --- แก้ไขโค้ดส่วนการคำนวณใหม่ตรงนี้ ---
+    # ใช้ errors='coerce' เพื่อเปลี่ยนค่าที่แปลงไม่ได้ให้เป็น NaN แล้วเติมด้วย 0 (.fillna(0))
+    debit_values = pd.to_numeric(mapped_df['Debit_Amount'], errors='coerce').fillna(0)
+    credit_values = pd.to_numeric(mapped_df['Credit_Amount'], errors='coerce').fillna(0)
+    
+    total_debit = debit_values.sum()
+    total_credit = credit_values.sum()
+    
     st.metric(label="ผลต่าง Debit/Credit (ต้องเป็น 0)", value=f"{total_debit - total_credit:,.2f} บาท")
-else:
-    st.warning("⚠️ ยังไม่มีข้อมูลในระบบ กรุณากลับไปอัปโหลดไฟล์ที่หน้าหลัก (app.py) ก่อนเริ่มใช้งาน")
