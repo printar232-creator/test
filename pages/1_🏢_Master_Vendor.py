@@ -1,11 +1,9 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 
 st.title("🏭 Module: ข้อมูลการผลิตและวัตถุดิบ (Production & Materials)")
 
 if 'df_vendor' in st.session_state:
-    # ดึงไฟล์ดิบที่อัปโหลดมาจากหน้าหลัก
     raw_df = st.session_state['df_vendor'].copy()
     
     st.subheader("📋 ข้อมูลดิบจากไฟล์")
@@ -14,12 +12,13 @@ if 'df_vendor' in st.session_state:
     st.subheader("✨ ข้อมูลที่ดึงหัวข้อและตัดแถวส่วนเกินอัตโนมัติ")
     
     try:
-        # 1. จัดการหัวตารางซ้อนกัน (แถวที่ 1 และ แถวที่ 2 ในรูปภาพ)
-        # เติมค่า None ให้เป็น String เปล่าเพื่อไม่ให้เกิดคำว่า 'nan' ในหัวข้อ
+        # เนื่องจากตั้ง header=None แถวจะตรงตามลำดับจริงในไฟล์ Excel ดังนี้:
+        # แถวที่ 0 = คำว่า Production
+        # แถวที่ 1 = คำว่า DATE, FAC, PRODUCT, RAW MATERIAL, PRODUCT
+        # แถวที่ 2 = คำว่า NAME, CODE, ORDER, SOURCE, CODE, R, S, QTY(KG)...
         row1 = raw_df.iloc[1].fillna('').astype(str).values
         row2 = raw_df.iloc[2].fillna('').astype(str).values
         
-        # รวมหัวข้อเข้าด้วยกัน เช่น 'RAW MATERIAL' + '_' + 'SOURCE' -> 'RAW MATERIAL_SOURCE'
         new_headers = []
         for r1, r2 in zip(row1, row2):
             r1_clean = r1.strip()
@@ -38,22 +37,27 @@ if 'df_vendor' in st.session_state:
                 header_name = "UNNAMED"
             new_headers.append(header_name)
             
-        # 2. สร้าง Dataframe ใหม่โดยใช้ข้อมูลตั้งแต่แถวที่ 3 เป็นต้นไป (Index 3+)
+        # เคลียร์ปัญหาชื่อซ้ำ (De-duplicate) เช่น ถ้ามี CODE ซ้ำ จะแก้เป็น CODE_1, CODE_2 อัตโนมัติ
+        final_headers = []
+        counts = {}
+        for h in new_headers:
+            if h in counts:
+                counts[h] += 1
+                final_headers.append(f"{h}_{counts[h]}")
+            else:
+                counts[h] = 0
+                final_headers.append(h)
+                
+        # ข้อมูลจริงจะเริ่มตั้งแต่แถวที่ 3 เป็นต้นไป (Index 3+)
         clean_df = raw_df.iloc[3:].copy()
-        
-        # 3. นำหัวข้อที่ดึงมาสวมกลับเข้าไปเป็น Header ของตาราง
-        clean_df.columns = new_headers
-        
-        # รีเซ็ตลำดับแถว (Index) ให้เริ่มจาก 0 ใหม่เพื่อความสวยงาม
+        clean_df.columns = final_headers
         clean_df = clean_df.reset_index(drop=True)
         
-        # แสดงผลตารางที่คลีนแล้ว
         st.dataframe(clean_df)
-        st.success(f"⚡ ดึงหัวตารางจากไฟล์สำเร็จ พบข้อมูลทั้งหมด {len(clean_df)} รายการ")
+        st.success(f"⚡ ดึงหัวตารางและแก้ไขชื่อคอลัมน์ซ้ำสำเร็จ ทั้งหมด {len(clean_df)} รายการ")
         
     except Exception as e:
         st.error(f"เกิดข้อผิดพลาดในการดึงหัวตาราง: {e}")
-        st.info("💡 คำแนะนำ: ตรวจสอบให้แน่ใจว่าไฟล์ที่อัปโหลดมีโครงสร้างแถวหัวตารางเหมือนกับในรูปภาพ")
         
 else:
     st.warning("⚠️ ยังไม่มีข้อมูลในระบบ กรุณากลับไปอัปโหลดไฟล์ที่หน้าหลัก (app.py) ก่อนเริ่มใช้งาน")
