@@ -5,10 +5,13 @@ st.title("🏭 Module: จัดสรรข้อมูลการผลิต
 
 # ตรวจสอบว่ามีข้อมูลถูกอัปโหลดมาจากหน้าหลักหรือยัง (ใช้คีย์จากหน้าหลัก)
 if 'df_vendor' in st.session_state:
-    df = st.session_state['df_vendor']
+    df_raw = st.session_state['df_vendor']
     
     st.subheader("📋 ข้อมูลดิบที่ดึงมาจากหน้าหลัก")
-    st.dataframe(df)
+    st.dataframe(df_raw)
+
+    # --- วิธีการแก้: ตัดแถวที่ 0, 1, 2, 3 ออก และรีเซ็ตดัชนีใหม่ ---
+    df = df_raw.iloc[4:].reset_index(drop=True)
 
     st.subheader("✨ ข้อมูลที่จัดสรรตามโครงสร้าง ERP Standard (Mapped Data)")
     
@@ -55,6 +58,4 @@ if 'df_vendor' in st.session_state:
     with col2:
         st.metric(label="📦 ยอดรวมสินค้าสำเร็จรูป (PRODUCT)", value=f"{prod_qty:,.2f} KG")
         
-    st.success(f"⚡ จัดสรรโครงสร้างข้อมูลสำเร็จ ทั้งหมด {len(mapped_df)} รายการ")
-else:
-    st.warning("⚠️ ยังไม่มีข้อมูลในระบบ กรุณกลับไปอัปโหลดไฟล์ที่หน้าหลัก (app.py) ก่อนเริ่มใช้งาน")
+    st.success(f"⚡ จัดสรรโครงสร้างข้อมูลสำเร็จ ทั้งหมด
