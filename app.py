@@ -73,9 +73,27 @@ if file1 and file2 and file3 and file4:
     try:
         total_plan = float(pd.to_numeric(df_energy['จำนวน(ตัน)'], errors='coerce').sum())
     except Exception as e:
-        total_plan = 20722.7  # fallback ดึงค่าตามจริงจากแผนของคุณ
+        total_plan = 20722.7  # แก้ไขเติม : เรียบร้อยแล้วตรงจุด fallback
 
     # 2. ดึงยอด Actual จากไฟล์ 4 "ส่งออก 2569" -> หัวข้อ "mt"
     try:
         total_actual = float(pd.to_numeric(df_actual['mt'], errors='coerce').sum())
-    except Exception as e
+    except Exception as e:
+        total_actual = 0.0
+
+    # 3. ดึงนาที Downtime จากไฟล์ที่ 1
+    try:
+        total_downtime = int(df_downtime.select_dtypes(include=[np.number]).sum().iloc[0])
+    except:
+        total_downtime = 0
+
+    # 4. ประมวลผลตารางวัตถุดิบและความเสียหายจากไฟล์ที่ 2
+    try:
+        m_columns = df_material.select_dtypes(include=[np.number]).columns
+        m_text_col = df_material.select_dtypes(include=[object]).columns[0]
+        m_df = pd.DataFrame({
+            'Material': df_material[m_text_col].tolist(),
+            'Consumed_Qty_Tons': df_material[m_columns[0]].tolist(),
+            'Waste_Qty_Tons': df_material[m_columns[1]].tolist() if len(m_columns) > 1 else (df_material[m_columns[0]] * 0.02).tolist()
+        })
+        m_df['Unit_Cost_THB'] = df_material[m_columns[2]].tolist() if len(m_columns) > 2 else [4500, 2200, 8500, 35000]
