@@ -1,4 +1,3 @@
-# คัดลอกโค้ดนี้ไปเซฟทับไฟล์ app.py เดิมใน GitHub ของคุณได้เลยครับ
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -22,7 +21,7 @@ st.markdown("""
 st.markdown('<div class="main-title">ระบบวิเคราะห์ต้นทุนการผลิตและการจัดการ ERP รายเดือน</div>', unsafe_allow_html=True)
 st.write("⚙️ เครื่องมือระดับผู้เชี่ยวชาญเพื่อระบุจุดสูญเสีย (Waste), คำนวณ OEE, วิเคราะห์ต้นทุนแร่/วัตถุดิบ และให้แนวทางปรับปรุงโรงงาน")
 
-# ส่วนของการอัปโหลดไฟล์ที่แถบด้านข้าง (Sidebar) - อัปเดตให้รองรับ .xls แล้ว
+# ส่วนของการอัปโหลดไฟล์ที่แถบด้านข้าง (Sidebar)
 st.sidebar.header("📁 อัปโหลดไฟล์ประจำเดือน (4 ไฟล์หลัก)")
 file1 = st.sidebar.file_uploader("1. ไฟล์บันทึกการผลิตและการหยุดทำงาน (Downtime Log)", type=["csv", "xlsx", "xls"])
 file2 = st.sidebar.file_uploader("2. ไฟล์ต้นทุนวัตถุดิบและความสูญเสีย (Material Waste Cost)", type=["csv", "xlsx", "xls"])
@@ -53,7 +52,6 @@ def read_uploaded_file(uploaded_file):
             if file_name.endswith('.csv'):
                 return pd.read_csv(uploaded_file)
             elif file_name.endswith('.xlsx') or file_name.endswith('.xls'):
-                # pd.read_excel สามารถอ่านได้ทั้ง .xlsx และ .xls โดยอัตโนมัติ
                 return pd.read_excel(uploaded_file)
         except Exception as e:
             st.error(f"เกิดข้อผิดพลาดในการอ่านไฟล์ {file_name}: {e}")
@@ -65,7 +63,7 @@ tabs = st.tabs(["📊 แดชบอร์ดภาพรวมรายเด�
 # ตรวจสอบการอัปโหลดไฟล์ครบทั้ง 4 อัน
 if file1 and file2 and file3 and file4:
     
-    # อ่านไฟล์จริงเข้าสู่ระบบ (โค้ดส่วนนี้พร้อมนำไปสกัดคอลัมน์จริงของโรงงานคุณได้ทันที)
+    # อ่านไฟล์จริงเข้าสู่ระบบ
     df_downtime = read_uploaded_file(file1)
     df_material = read_uploaded_file(file2)
     df_energy = read_uploaded_file(file3)
@@ -123,37 +121,3 @@ if file1 and file2 and file3 and file4:
             ส่งผลให้ประสิทธิภาพความพร้อมของเครื่องจักรลดลง ส่วนความสูญเสียวัตถุดิบ (Yield Loss) อยู่ในเกณฑ์ควบคุมได้ดี แต่สามารถลดต้นทุนเพิ่มได้อีกในจุดบรรจุภัณฑ์
         </div>
         """, unsafe_allow_html=True)
-
-    # --- TAB 2: วิเคราะห์ DOWNTIME ---
-    with tabs[1]:
-        st.markdown('<div class="section-title">วิเคราะห์สาเหตุการหยุดเครื่องจักร (Downtime Pareto)</div>', unsafe_allow_html=True)
-        dt_reason_df = pd.DataFrame({
-            'Downtime_Reason': ['ปรับตั้งเครื่องจักร/เปลี่ยนไซส์แร่ (Setup)', 'ระบบดูดถุงแตก/เครื่องแพ็กขัดข้อง', 'เครื่องบดขัดข้อง (Mechanical)', 'รอวัตถุดิบเข้าไลน์'],
-            'Downtime_Mins': [180, 150, 115, 70]
-        }).sort_values(by='Downtime_Mins', ascending=False)
-        
-        fig_dt = px.bar(dt_reason_df, x='Downtime_Reason', y='Downtime_Mins', title="นาทีการหยุดไลน์แยกตามสาเหตุ", text_auto=True, color='Downtime_Mins', color_continuous_scale='Reds')
-        st.plotly_chart(fig_dt, use_container_width=True)
-        
-        st.markdown("""
-        <div class="card">
-            <b>🎯 ข้อเสนอแนะเชิงวิศวกรรมเพื่อลดต้นทุน:</b><br>
-            - <b>ปัญหาเครื่องแพ็กขัดข้อง (ถุงขาด/ระบบดูดจับรั้งแนวซีล):</b> เกิดจากแรงดูดของ Robot Suction Cups หรือความสม่ำเสมอของเนื้อถุง ควรปรับตั้งแรงดูดสูญญากาศให้เหมาะสม หรือเพิ่มระดับการตรวจสอบความเหนียวฟิล์มก่อนรับคลัง<br>
-            - <b>การปรับตั้งเครื่องจักร (Setup/Changeover):</b> ควรกำหนดมาตรฐานการล้างถังเครื่องบด (Raymond Mill) ให้เป็นแบบ SMED เพื่อลดเวลา Setup ลง 30%
-        </div>
-        """, unsafe_allow_html=True)
-
-    # --- TAB 3: วิเคราะห์ต้นทุนวัตถุดิบ & WASTE ---
-    with tabs[2]:
-        st.markdown('<div class="section-title">วิเคราะห์ความสูญเสียเนื้อแร่และบรรจุภัณฑ์ (Yield Analysis)</div>', unsafe_allow_html=True)
-        col1, col2 = st.columns(2)
-        with col1:
-            fig_waste = px.pie(m_df, values='Waste_Cost_THB', names='Material', title='มูลค่าความสูญเสียในกระบวนการ (บาท)', hole=0.4, color_discrete_sequence=px.colors.sequential.RdBu)
-            st.plotly_chart(fig_waste, use_container_width=True)
-        with col2:
-            st.write("### ตารางแจกแจงค่าสูญเสียวัตถุดิบ")
-            st.dataframe(m_df[['Material', 'Consumed_Qty_Tons', 'Waste_Qty_Tons', 'Waste_Cost_THB']].style.format({'Waste_Cost_THB': '{:,.2f}'}))
-            
-        st.markdown("""
-        <div class="card">
-            <b>💰 มาตรการควบคุมผ่าน ERP:</b>
