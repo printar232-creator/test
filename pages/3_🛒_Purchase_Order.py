@@ -3,17 +3,10 @@ import pandas as pd
 
 st.title("🛒 Module: ข้อมูลใบสั่งซื้อค้างส่ง (Open Purchase Orders)")
 
-uploaded_file = st.file_uploader("อัปโหลดไฟล์ Open PO ข้อมูลดิบ", type=['csv', 'xlsx', 'xls'], key="po")
-
-if uploaded_file:
-    if uploaded_file.name.endswith('.xlsx'):
-        df = pd.read_excel(uploaded_file, engine='openpyxl')
-    elif uploaded_file.name.endswith('.xls'):
-        df = pd.read_excel(uploaded_file, engine='xlrd')
-    else:
-        df = pd.read_csv(uploaded_file)
-        
-    st.subheader("📋 ข้อมูลดิบที่อัปโหลดเข้าสู่ระบบ")
+if 'df_po' in st.session_state:
+    df = st.session_state['df_po']
+    
+    st.subheader("📋 ข้อมูลดิบที่ดึงมาจาก Session State")
     st.dataframe(df)
 
     st.subheader("✨ ข้อมูลที่จัดสรรพร้อมนำเข้า ERP (Mapped Data)")
@@ -25,3 +18,5 @@ if uploaded_file:
     
     st.dataframe(mapped_df)
     st.success("จับคู่ข้อมูล Transaction PO สำเร็จ")
+else:
+    st.warning("⚠️ ยังไม่มีข้อมูลในระบบ กรุณากลับไปอัปโหลดไฟล์ที่หน้าหลัก (app.py) ก่อนเริ่มใช้งาน")
