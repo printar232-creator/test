@@ -3,10 +3,16 @@ import pandas as pd
 
 st.title("🛒 Module: ข้อมูลใบสั่งซื้อค้างส่ง (Open Purchase Orders)")
 
-uploaded_file = st.file_uploader("อัปโหลดไฟล์ Open PO ข้อมูลดิบ", type=['csv', 'xlsx'], key="po")
+uploaded_file = st.file_uploader("อัปโหลดไฟล์ Open PO ข้อมูลดิบ", type=['csv', 'xlsx', 'xls'], key="po")
 
 if uploaded_file:
-    df = pd.read_excel(uploaded_file) if uploaded_file.name.endswith('.xlsx') else pd.read_csv(uploaded_file)
+    if uploaded_file.name.endswith('.xlsx'):
+        df = pd.read_excel(uploaded_file, engine='openpyxl')
+    elif uploaded_file.name.endswith('.xls'):
+        df = pd.read_excel(uploaded_file, engine='xlrd')
+    else:
+        df = pd.read_csv(uploaded_file)
+        
     st.subheader("📋 ข้อมูลดิบที่อัปโหลดเข้าสู่ระบบ")
     st.dataframe(df)
 
