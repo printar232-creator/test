@@ -20,10 +20,10 @@ st.markdown('<div class="main-title">ระบบวิเคราะห์ต�
 
 # 📁 แถบเมนูด้านข้างสำหรับอัปโหลดไฟล์
 st.sidebar.header("📁 อัปโหลดไฟล์ประจำเดือน (4 ไฟล์หลัก)")
-file1 = st.sidebar.file_uploader("1. ไฟล์ ผลิต พ.ค.2569 (Downtime & Production Log)", type=["csv", "xlsx", "xls"])
-file2 = st.sidebar.file_uploader("2. ไฟล์ รับพัสดุ 2569 (Material Waste Cost)", type=["csv", "xlsx", "xls"])
-file3 = st.sidebar.file_uploader("3. ไฟล์ รับวัตถุดิบ 2569 (Energy & Production Plan)", type=["csv", "xlsx", "xls"])
-file4 = st.sidebar.file_uploader("4. ไฟล์ ส่งออก 2569 (Actual Production Data)", type=["csv", "xlsx", "xls"])
+file1 = st.sidebar.file_uploader("1. ไฟล์ ผลิต พ.ค. (Downtime & Production Log)", type=["csv", "xlsx", "xls"])
+file2 = st.sidebar.file_uploader("2. ไฟล์ รับพัสดุ  (Material Waste Cost)", type=["csv", "xlsx", "xls"])
+file3 = st.sidebar.file_uploader("3. ไฟล์ รับวัตถุดิบ  (Energy & Production Plan)", type=["csv", "xlsx", "xls"])
+file4 = st.sidebar.file_uploader("4. ไฟล์ ส่งออก  (Actual Production Data)", type=["csv", "xlsx", "xls"])
 
 month_name = st.sidebar.selectbox("เลือกเดือนที่นำเข้าข้อมูล", 
     ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"])
