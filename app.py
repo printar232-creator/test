@@ -70,9 +70,14 @@ if file1 and file2 and file3 and file4:
     # ระบบสกัดข้อมูลแบบ Dynamic (หากชื่อคอลัมน์ไม่ตรง ระบบจะดึงข้อมูลแถวแรกมาคำนวณแทนเพื่อไม่ให้หน้าจอขาว)
     # -------------------------------------------------------------------------
     try:
-        total_downtime = int(df_downtime.select_dtypes(include=[np.number]).sum().iloc[0])
-    except:
-        total_downtime = 515  # ค่า Default ป้องกันระบบค้าง
+        # เปลี่ยนคำว่า 'Actual' และ 'Plan' ให้ตรงกับหัวตารางในไฟล์ Excel จริงของคุณ
+        # และใช้ pd.to_numeric เพื่อแปลงกรณีที่ Excel มองตัวเลขเป็นข้อความ
+        total_actual = float(pd.to_numeric(df_plan['Actual'], errors='coerce').sum())
+        total_plan = float(pd.to_numeric(df_plan['Plan'], errors='coerce').sum())
+    except Exception as e:
+        # หากหาไม่เจอ ให้พิมพ์ชื่อคอลัมน์ที่มีทั้งหมดในไฟล์ออกมาดูบนหน้าจอเพื่อเช็ก
+        st.warning(f"ระบบหาชื่อคอลัมน์ไม่เจอ หัวตารางในไฟล์ของคุณคือ: {list(df_plan.columns)}")
+        total_actual, total_plan = 0.0, 20722.7  # ดึงยอดแผนตามจริงของคุณมาใส่เป็นค่า Default
         
     try:
         total_actual = float(df_plan.select_dtypes(include=[np.number]).sum().iloc[0])
