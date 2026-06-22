@@ -3,17 +3,10 @@ import pandas as pd
 
 st.title("📦 Module: ข้อมูลสินค้าและวัตถุดิบ (Item Master)")
 
-uploaded_file = st.file_uploader("อัปโหลดไฟล์ Item Master ข้อมูลดิบ", type=['csv', 'xlsx', 'xls'], key="item")
-
-if uploaded_file:
-    if uploaded_file.name.endswith('.xlsx'):
-        df = pd.read_excel(uploaded_file, engine='openpyxl')
-    elif uploaded_file.name.endswith('.xls'):
-        df = pd.read_excel(uploaded_file, engine='xlrd')
-    else:
-        df = pd.read_csv(uploaded_file)
-        
-    st.subheader("📋 ข้อมูลดิบที่อัปโหลดเข้าสู่ระบบ")
+if 'df_item' in st.session_state:
+    df = st.session_state['df_item']
+    
+    st.subheader("📋 ข้อมูลดิบที่ดึงมาจาก Session State")
     st.dataframe(df)
 
     st.subheader("✨ ข้อมูลที่จัดสรรพร้อมนำเข้า ERP (Mapped Data)")
@@ -24,3 +17,5 @@ if uploaded_file:
     
     st.dataframe(mapped_df)
     st.success(f"ตรวจสอบเสร็จสิ้น: พบสินค้าทั้งหมด {len(mapped_df)} รายการ")
+else:
+    st.warning("⚠️ ยังไม่มีข้อมูลในระบบ กรุณากลับไปอัปโหลดไฟล์ที่หน้าหลัก (app.py) ก่อนเริ่มใช้งาน")
