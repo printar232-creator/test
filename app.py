@@ -9,13 +9,14 @@ st.markdown("---")
 st.write("### 📥 ขั้นตอน: อัปโหลดไฟล์ทั้ง 4 ให้ครบ จากนั้นเลือกดูข้อมูลในแต่ละโมดูลที่แถบด้านซ้าย")
 
 # ฟังก์ชันกลางสำหรับอ่านไฟล์รองรับ xlsx, xls, csv
+# แก้ไขฟังก์ชันดึงข้อมูลในไฟล์ app.py ให้เป็นแบบนี้
 def load_data(file):
     if file.name.endswith('.xlsx'):
-        return pd.read_excel(file, engine='openpyxl')
+        return pd.read_excel(file, engine='openpyxl', header=None) # เพิ่ม header=None
     elif file.name.endswith('.xls'):
-        return pd.read_excel(file, engine='xlrd')
+        return pd.read_excel(file, engine='xlrd', header=None)     # เพิ่ม header=None
     else:
-        return pd.read_csv(file)
+        return pd.read_csv(file, header=None)                      # เพิ่ม header=None
 
 # สร้าง Layout กล่องอัปโหลดแบบ 2x2 เพื่อความสวยงาม
 col1, col2 = st.columns(2)
