@@ -3,17 +3,10 @@ import pandas as pd
 
 st.title("🧾 Module: สมุดบัญชีแยกประเภทและยอดหมุนเวียน (G/L Balances)")
 
-uploaded_file = st.file_uploader("อัปโหลดไฟล์ Trial Balance / GL", type=['csv', 'xlsx', 'xls'], key="gl")
-
-if uploaded_file:
-    if uploaded_file.name.endswith('.xlsx'):
-        df = pd.read_excel(uploaded_file, engine='openpyxl')
-    elif uploaded_file.name.endswith('.xls'):
-        df = pd.read_excel(uploaded_file, engine='xlrd')
-    else:
-        df = pd.read_csv(uploaded_file)
-        
-    st.subheader("📋 ข้อมูลดิบที่อัปโหลดเข้าสู่ระบบ")
+if 'df_gl' in st.session_state:
+    df = st.session_state['df_gl']
+    
+    st.subheader("📋 ข้อมูลดิบที่ดึงมาจาก Session State")
     st.dataframe(df)
 
     st.subheader("✨ ข้อมูลที่จัดสรรพร้อมนำเข้า ERP (Mapped Data)")
@@ -28,3 +21,5 @@ if uploaded_file:
     total_debit = pd.to_numeric(mapped_df['Debit_Amount']).sum()
     total_credit = pd.to_numeric(mapped_df['Credit_Amount']).sum()
     st.metric(label="ผลต่าง Debit/Credit (ต้องเป็น 0)", value=f"{total_debit - total_credit:,.2f} บาท")
+else:
+    st.warning("⚠️ ยังไม่มีข้อมูลในระบบ กรุณากลับไปอัปโหลดไฟล์ที่หน้าหลัก (app.py) ก่อนเริ่มใช้งาน")
