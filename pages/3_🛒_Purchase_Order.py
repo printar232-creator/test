@@ -3,21 +3,20 @@ import pandas as pd
 
 st.title("🛒 Module: ข้อมูลใบสั่งซื้อค้างส่ง (Open Purchase Orders)")
 
-# ตรวจสอบว่ามีไฟล์อัปโหลดเก็บไว้ใน session หรือมีข้อมูลเดิมอยู่หรือไม่
-# (โค้ดนี้จะรองรับทั้งกรณีที่เก็บไฟล์ดิบ หรือต้องการอ่านใหม่ในหน้านี้โดยตรง)
-if 'uploaded_file' in st.session_state or 'df_po' in st.session_state:
-    
-    # ดึง Dataframe มาแสดงผล
+# เพิ่มกล่องอัปโหลดไฟล์เฉพาะของหน้านี้ เพื่อดึง Sheet 2 โดยตรง ไม่กระทบหน้าอื่น
+uploaded_file_po = st.file_uploader(
+    "📂 อัปโหลดไฟล์ Excel (ระบบจะดึงข้อมูลจาก Sheet ที่ 2 ให้โดยอัตโนมัติ)", 
+    type=["xlsx", "xls"],
+    key="po_sheet2_uploader"
+)
+
+# ตรวจสอบว่ามีการอัปโหลดไฟล์ในหน้านี้หรือไม่
+if uploaded_file_po is not None:
     try:
-        # หากใน app.py มีการเก็บไฟล์อัปโหลดดิบไว้ (เช่น st.session_state['uploaded_file'] = uploaded_file)
-        if 'uploaded_file' in st.session_state and st.session_state['uploaded_file'] is not None:
-            # ทำการอ่าน Sheet ที่ 2 (index คือ 1) ตรงนี้เลย ไม่กระทบหน้าอื่นแน่นอน
-            df = pd.read_excel(st.session_state['uploaded_file'], sheet_name=1)
-        else:
-            # Fallback หากไม่มีไฟล์ดิบ แต่มี df_po เดิม
-            df = st.session_state['df_po']
-            
-        st.subheader("📋 ข้อมูลดิบจาก Sheet ที่ 2 (ดึงเฉพาะโมดูลนี้)")
+        # สั่งอ่าน Sheet ที่ 2 (index คือ 1) จากไฟล์ที่อัปโหลดตรงหน้านี้เลย
+        df = pd.read_excel(uploaded_file_po, sheet_name=1)
+        
+        st.subheader("📋 ข้อมูลดิบจาก Sheet ที่ 2")
         st.dataframe(df)
 
         st.subheader("✨ ข้อมูลที่จัดสรรพร้อมนำเข้า ERP (Mapped Data)")
@@ -44,4 +43,4 @@ if 'uploaded_file' in st.session_state or 'df_po' in st.session_state:
         st.error(f"เกิดข้อผิดพลาดในการอ่าน Sheet ที่ 2: {e}")
         st.info("💡 คำแนะนำ: ตรวจสอบให้แน่ใจว่าไฟล์ Excel ที่อัปโหลดมีอย่างน้อย 2 Sheet")
 else:
-    st.warning("⚠️ ยังไม่มีข้อมูลในระบบ กรุณากลับไปอัปโหลดไฟล์ที่หน้าหลัก (app.py) ก่อนเริ่มใช้งาน")
+    st.info("💡 กรุณาอัปโหลดไฟล์ Excel ชุดเดียวกับหน้าหลักที่นี่อีกครั้ง เพื่อให้ระบบดึงข้อมูลจาก Sheet ที่ 2 แยกเฉพาะโมดูลนี้")
