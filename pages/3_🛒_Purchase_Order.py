@@ -30,7 +30,13 @@ if 'df_po_sheet2' in st.session_state:
         df_cleaned.columns = new_header
         df_cleaned.reset_index(drop=True, inplace=True)
         
-        # --- 🟢 ส่วนที่แก้ไข: เจาะจงค้นหาคำว่า "หมายเหตุ" ภายในคอลัมน์ "หมายเหตุ" เท่านั้น ---
+        # --- 🟢 ส่วนที่แก้ไข: จัดการปัญหาชื่อคอลัมน์ซ้ำกัน (Fix Duplicate Column Names) ---
+        s = pd.Series(df_cleaned.columns)
+        # ถ้าระบบพบชื่อซ้ำ จะรันตัวเลขห้อยท้ายให้เองอัตโนมัติ เช่น คอลัมน์ว่าง 'nan' จะกลายเป็น 'nan', 'nan.1', 'nan.2'
+        df_cleaned.columns = s.where(~s.duplicated(), s + '.' + s.groupby(s).cumcount().astype(str))
+        # ---------------------------------------------------------------------------------
+        
+        # เจาะจงค้นหาคำว่า "หมายเหตุ" ภายในคอลัมน์ "หมายเหตุ"
         if "หมายเหตุ" in df_cleaned.columns:
             # สแกนหาแถวที่มีคำว่า "หมายเหตุ" ซ่อนอยู่ในคอลัมน์หมายเหตุ
             note_indices = df_cleaned[df_cleaned["หมายเหตุ"].astype(str).str.contains("หมายเหตุ", na=False)].index
@@ -40,7 +46,6 @@ if 'df_po_sheet2' in st.session_state:
                 first_stop_idx = note_indices[0]
                 df_cleaned = df_cleaned.iloc[:first_stop_idx].copy()
                 st.success(f"✂️ ตรวจพบแถวคั่นปีในคอลัมน์หมายเหตุ ระบบทำการตัดข้อมูลปีเก่าออกให้เรียบร้อยแล้ว")
-        # ---------------------------------------------------------------------------------
 
         st.subheader("📋 ข้อมูลดิบจาก Sheet ที่ 2 (ดึงอัตโนมัติจากไฟล์หน้าหลัก)")
         st.dataframe(df_cleaned)
