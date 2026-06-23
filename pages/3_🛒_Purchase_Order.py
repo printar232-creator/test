@@ -3,28 +3,19 @@ import pandas as pd
 
 st.title("🛒 Module: ข้อมูลใบสั่งซื้อค้างส่ง (Open Purchase Orders)")
 
-# --- ตรวจสอบโครงสร้างไฟล์หลัก เพื่อหาไฟล์ดิบที่อัปโหลดมาจาก app.py ---
-# โดยปกติ Streamlit จะเก็บไฟล์อัปโหลดไว้ใน Session State อัตโนมัติ (มักจะใช้คีย์ตามชื่อตัวแปรหรือคีย์ที่ตั้งไว้)
-# โค้ดนี้จะค้นหาไฟล์ดิบที่ถูกส่งมาจากหน้าแรกให้เองครับ
+# 1. ตรวจสอบว่ามีไฟล์ดิบจากหน้าหลักเข้ามาเก็บไว้ในระบบหรือยัง
+if 'main_upload_file' in st.session_state and st.session_state['main_upload_file'] is not None:
+    
+    # 2. ถ้ามีไฟล์ดิบ และหน้านี้ยังไม่เคยดึง Sheet 2 ให้ทำการดึงและเก็บไว้ในคีย์ของตัวเองแยกต่างหาก
+    if 'df_po_sheet2' not in st.session_state:
+        try:
+            # สั่งแกะเอาเฉพาะ Sheet ที่ 2 (index 1) มาเก็บไว้ใช้เฉพาะหน้านี้
+            st.session_state['df_po_sheet2'] = pd.read_excel(st.session_state['main_upload_file'], sheet_name=1)
+        except Exception as e:
+            st.error(f"❌ ไม่สามารถดึงข้อมูล Sheet ที่ 2 ได้: {e}")
+            st.info("💡 คำแนะนำ: ตรวจสอบว่าไฟล์ Excel ที่อัปโหลดมีอย่างน้อย 2 Sheet หรือไม่")
 
-found_file = None
-
-# ค้นหาไฟล์ Excel ใน session_state ที่อัปโหลดมาจากหน้าแรก
-for key, value in st.session_state.items():
-    # ตรวจสอบว่าเป็นวัตถุไฟล์ที่อัปโหลดมาหรือไม่ (มักจะมีแอตทริบิวต์ name และหมวดหมู่ของไฟล์)
-    if hasattr(value, 'name') and any(value.name.endswith(ext) for ext in ['.xlsx', '.xls']):
-        found_file = value
-        break
-
-# ถ้าระบบเจอไฟล์ดิบจากหน้าแรก และยังไม่เคยโหลด Sheet 2 มาเก็บไว้ในหน้านี้
-if found_file is not None and 'df_po_sheet2' not in st.session_state:
-    try:
-        # แอบอ่าน Sheet 2 (index 1) จากไฟล์ดิบนั้นตรงนี้เลย ไม่กระทบหน้าอื่นแน่นอน
-        st.session_state['df_po_sheet2'] = pd.read_excel(found_file, sheet_name=1)
-    except Exception as e:
-        st.error(f"❌ ไม่สามารถดึงข้อมูล Sheet ที่ 2 จากไฟล์ที่อัปโหลดได้: {e}")
-
-# --- ส่วนการแสดงผล (ดึงข้อมูลจากความจำประจำเป็นของหน้านี้เอง ข้อมูลจึงไม่หายเมื่อเปลี่ยนหน้า) ---
+# 3. ส่วนการแสดงผล (ข้อมูลจะถูกดึงจากหน่วยความจำหน้านี้เอง สลับหน้าข้อมูลก็ไม่หาย)
 if 'df_po_sheet2' in st.session_state:
     df = st.session_state['df_po_sheet2']
     
