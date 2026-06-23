@@ -4,48 +4,44 @@ import io
 
 st.title("🧾 Module: สมุดบัญชีแยกประเภทและยอดหมุนเวียน (G/L Balances)")
 
-# 🟢 [จุดแก้ไขสำคัญ] ล็อกตัวไฟล์ดิบไว้ใน Session State ของหน้าย่อยทันทีเพื่อป้องกันการเลือนหาย
-if "upload_g" in st.session_state and st.session_state["upload_g"] is not None:
-    # ฝากไฟล์ดิบเข้าตัวแปรส่วนตัวของโมดูลนี้
-    st.session_state["gl_file_backup"] = st.session_state["upload_g"]
-
-# ตรวจสอบว่ามีข้อมูลจากหน้าหลักหรือมีไฟล์สำรองหรือไม่
-if 'df_gl' in st.session_state or "gl_file_backup" in st.session_state:
+# ตรวจสอบการอัปโหลดไฟล์จากหน้าหลัก
+if 'df_gl' in st.session_state or "upload_g" in st.session_state:
     
+    file_gl_raw = st.session_state.get("upload_g")
     df = None
     
-    try:
-        # เรียกใช้ไฟล์จากตัวจำค่าสำรองที่เราล็อกไว้
-        file_gl_raw = st.session_state.get("gl_file_backup")
-        
-        if file_gl_raw is not None:
-            # ใช้การเข้าถึงข้อมูลแบบ Binary สดๆ 
-            file_bytes = file_gl_raw.getvalue() if hasattr(file_gl_raw, 'getvalue') else file_gl_raw
-            
-            # บังคับอ่านด้วยสเปกที่เจาะลึก
+    if file_gl_raw is not None:
+        try:
+            # ดึงไบต์ไฟล์สดเพื่อเข้าไปอ่านโครงสร้างแผ่นงานทั้งหมดที่มี
+            file_bytes = file_gl_raw.getvalue()
             excel_file = pd.ExcelFile(io.BytesIO(file_bytes))
-            sheet_names = excel_file.sheet_names
+            all_sheets = excel_file.sheet_names
             
-            if len(sheet_names) > 1:
-                # เจาะจงเลือก Sheet ลำดับที่ 2 (Index 1)
-                target_sheet = sheet_names[1]
-                st.info(f"📂 ค้นพบแผ่นงานทั้งหมด: {sheet_names} -> กำลังเจาะจงอ่านแผ่นงานที่ 2 คือ: **{target_sheet}**")
-                
-                # อ่านไฟล์โดยบังคับ Engine ให้ชัดเจน
-                df = pd.read_excel(io.BytesIO(file_bytes), sheet_name=1, header=None, engine='openpyxl')
-            else:
-                st.error(f"❌ ไฟล์นี้มีแค่ Sheet เดียวคือ '{sheet_names[0]}' ไม่พบ Sheet อื่นๆ ในไฟล์")
-                df = st.session_state.get('df_gl')
-        else:
+            st.markdown("---")
+            st.markdown("### 🔍 ตรวจพบแผ่นงานในไฟล์ของคุณ")
+            
+            # 🟢 [จุดเด็ดขาด] สร้าง Dropdown ให้ผู้ใช้เลือก Sheet เองเพื่อบังคับสั่งโหลดใหม่ตามต้องการ
+            selected_sheet = st.selectbox(
+                "กรุณาเลือกแผ่นงาน (Sheet) ที่ถูกต้องสำหรับหน้าสมุดบัญชีแยกประเภท:",
+                options=all_sheets,
+                index=1 if len(all_sheets) > 1 else 0  # ตั้งค่าเริ่มต้นให้ชี้ไปที่ Sheet ลำดับที่ 2
+            )
+            
+            # บังคับอ่านข้อมูลจากแผ่นงานที่เลือกทันที
+            df = pd.read_excel(io.BytesIO(file_bytes), sheet_name=selected_sheet, header=None, engine='openpyxl')
+            st.success(f"📋 ดึงข้อมูลจากแผ่นงาน: **'{selected_sheet}'** สำเร็จ")
+            
+        except Exception as e:
+            st.error(f"❌ ระบบไม่สามารถเจาะอ่านไฟล์ Excel ได้: {e}")
             df = st.session_state.get('df_gl')
-            
-    except Exception as e:
-        st.warning(f"⚠️ กำลังสลับไปใช้ระบบสำรองอัตโนมัติเนื่องจาก: {e}")
+    else:
+        # กรณีที่เป็นไฟล์ประเภทอื่นที่ไม่ใช่ Excel (.csv)
         df = st.session_state.get('df_gl')
+        st.info("ℹ️ ตรวจพบเป็นไฟล์เดี่ยว (.csv) ระบบจึงดึงข้อมูลแผ่นงานหลักมาใช้งานโดยอัตโนมัติ")
 
-    # ประมวลผลและจัดทำ Mapped Data
+    # --- ส่วนการนำข้อมูลไปใช้งานต่อ (คงเดิมเพื่อไม่ให้ระบบรวน) ---
     if df is not None:
-        st.subheader("📋 ข้อมูลดิบที่ดึงมาจาก Sheet ลำดับที่ 2")
+        st.subheader("📋 ข้อมูลดิบที่ระบบอ่านได้ในปัจจุบัน")
         st.dataframe(df)
 
         st.subheader("✨ ข้อมูลที่จัดสรรพร้อมนำเข้า ERP (Mapped Data)")
