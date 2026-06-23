@@ -22,7 +22,7 @@ if 'df_item' in st.session_state and not st.session_state['df_item'].empty:
     
     # ตรวจสอบโครงสร้างคอลัมน์และดึงมาแสดงผลให้ครบทุกช่องตามจริง
     if total_cols > 0: mapped_df['Date'] = cleaned_df.iloc[:, 0]              # วันที่
-    if total_cols > 1: mapped_df['Buyer'] = cleaned_df.iloc[:, 1]             # ผู้ซื้อ
+    #if total_cols > 1: mapped_df['Buyer'] = cleaned_df.iloc[:, 1]             # ผู้ซื้อ
     if total_cols > 2: mapped_df['Received_From'] = cleaned_df.iloc[:, 2]     # ได้รับจาก
     if total_cols > 3: mapped_df['Item_Description'] = cleaned_df.iloc[:, 3]  # รายการ
     if total_cols > 4: mapped_df['Item_Code'] = cleaned_df.iloc[:, 4]         # รหัส
