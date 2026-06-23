@@ -36,7 +36,7 @@ if 'df_vendor' in st.session_state:
     mapped_df['RM_QTY_KG'] = df.iloc[:, 9] if num_cols > 9 else 0
     
     # --- ฝั่งข้อมูลส่วนเพิ่มด้านขวา ---
-    # ❌ เอาออก: df.iloc[:, 10] (PROD_QTY_KG)
+    mapped_df['P_QTY_KG'] = df.iloc[:, 10] if num_cols > 10 else 0
     # ❌ เอาออก: df.iloc[:, 11] (PROD_CODE)
     mapped_df['BAG'] = df.iloc[:, 12] if num_cols > 12 else "N/A"
     # ❌ เอาออก: df.iloc[:, 13] (BAG_CODE)
