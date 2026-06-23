@@ -22,21 +22,24 @@ if 'df_po_sheet2' in st.session_state:
     if df_raw.empty:
         st.warning("⚠️ พบข้อมูลในระบบ แต่ไม่มีรายการข้อมูลใน Sheet นี้ (0 แถว)")
     else:
-        # ดึงแถวแรก (index 0) มาทำเป็นหัวข้อคอลัมน์ภาษาไทย
+        # --- 🟢 ส่วนที่แก้ไข: ดันแถวแรกขึ้นเป็นหัวข้อคอลัมน์ (Header Replacement) ---
+        # นำค่าในแถวแรก (index 0) มาแปลงเป็นลิสต์ชื่อคอลัมน์
         new_header = df_raw.iloc[0].astype(str).tolist()
         
-        # ตัดแถวแรกทิ้ง แล้วตั้งชื่อคอลัมน์ใหม่ตามหัวภาษาไทย
+        # ตัดแถวแรกทิ้ง (เหลือตั้งแต่แถว index 1 เป็นต้นไป) แล้วตั้งชื่อคอลัมน์ใหม่
         df_cleaned = df_raw.iloc[1:].copy()
         df_cleaned.columns = new_header
         
-        # 🟢 จุดที่แก้ไข SyntaxError: รีเซ็ตดัชนีแถวให้ถูกต้อง
-        df_cleaned.reset_index(drop=True, inplace=True)
+        # รีเซ็ต index ของแถวใหม่ให้เริ่มจาก 0 จะได้ดูง่ายๆ
+        df_cleaned.reset_index(drop=True, inplace=self_or_df=df_cleaned)
         
         st.subheader("📋 ข้อมูลดิบจาก Sheet ที่ 2 (ดึงอัตโนมัติจากไฟล์หน้าหลัก)")
         st.dataframe(df_cleaned)
 
         st.subheader("✨ ข้อมูลที่จัดสรรพร้อมนำเข้า ERP (Mapped Data)")
+        
+        # แสดงผลตารางเดียวกันที่จัดเรียงความสวยงามเรียบร้อยแล้ว
         st.dataframe(df_cleaned)
         st.success(f"จัดรูปแบบหัวคอลัมน์สำเร็จ! พบข้อมูลทั้งหมด {len(df_cleaned)} รายการ")
 else:
-    st.warning("⚠️ ยังไม่มีข้อมูลในระบบ กรุณาอัปโหลดไฟล์ที่หน้าหลัก (app.py) ก่อนเริ่มใช้งาน")
+    st.warning("⚠️ ยังไม่มีข้อมูลในระบบ หรือระบบหาไฟล์จากหน้าหลักไม่เจอ กรุณาอัปโหลดไฟล์ที่หน้าหลัก (app.py) ก่อนเริ่มใช้งาน")
