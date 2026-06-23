@@ -3,8 +3,6 @@ import pandas as pd
 
 st.title("🛒 Module: ข้อมูลใบสั่งซื้อค้างส่ง (Open Purchase Orders)")
 
-if 'df_po' in st.session_state:
-    df = st.session_state['df_po']
     # เพิ่ม sheet_name=1 เข้าไปเพื่อบังคับให้อ่าน Sheet ที่สอง
 df_po = pd.read_excel(uploaded_file, sheet_name=1)
     
