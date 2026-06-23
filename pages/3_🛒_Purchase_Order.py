@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 
 st.title("🛒 Module: ข้อมูลใบสั่งซื้อค้างส่ง (Open Purchase Orders)")
 
@@ -15,14 +16,20 @@ if 'main_upload_file' in st.session_state and st.session_state['main_upload_file
             st.warning("⚠️ พบข้อมูลในระบบ แต่ไม่มีรายการข้อมูลใน Sheet นี้ (0 แถว)")
         else:
             # ดึงแถวแรก (index 0) มาทำเป็นหัวข้อคอลัมน์ภาษาไทย
-            new_header = df_raw.iloc[0].astype(str).tolist()
+            # หากช่องไหนในแถวแรกเป็นค่าว่าง ให้แทนที่ด้วยคำว่า Column_{ลำดับที่} เพื่อป้องกันหัวตารางเป็นคำว่า "nan"
+            new_header = []
+            for idx, val in enumerate(df_raw.iloc[0]):
+                if pd.isna(val) or str(val).strip().lower() == 'nan' or str(val).strip() == '':
+                    new_header.append(f"Unnamed_Column_{idx}")
+                else:
+                    new_header.append(str(val).strip())
             
-            # ตัดแถวแรกทิ้ง แล้วตั้งชื่อคอลัมน์ใหม่ตามหัวภาษาไทย
+            # ตัดแถวแรกทิ้ง แล้วตั้งชื่อคอลัมน์ใหม่ตามหัวที่จัดการแล้ว
             df_cleaned = df_raw.iloc[1:].copy()
             df_cleaned.columns = new_header
             df_cleaned.reset_index(drop=True, inplace=True)
             
-            # --- 🟢 แก้ไขจุดที่ทำให้เกิด SyntaxError: เปลี่ยนวิธีรันลำดับชื่อคอลัมน์ที่ซ้ำให้ปลอดภัย ---
+            # --- จัดการปัญหาชื่อคอลัมน์ซ้ำกัน เพื่อป้องกันการชนกันของคอลัมน์ ---
             cols = list(df_cleaned.columns)
             counts = {}
             for i, col in enumerate(cols):
@@ -31,9 +38,8 @@ if 'main_upload_file' in st.session_state and st.session_state['main_upload_file
                     if counts[col] > 1:
                         cols[i] = f"{col}_{counts[col] - 1}"
             df_cleaned.columns = cols
-            # ---------------------------------------------------------------------------------
             
-            # เจาะจงค้นหาคำว่า "หมายเหตุ" ภายในคอลัมน์ที่ชื่อว่า "หมายเหตุ" เท่านั้น
+            # --- เจาะจงค้นหาคำว่า "หมายเหตุ" ภายในคอลัมน์ที่ชื่อว่า "หมายเหตุ" เท่านั้น ---
             if "หมายเหตุ" in df_cleaned.columns:
                 # สแกนหาแถวที่มีคำว่า "หมายเหตุ" ซ่อนอยู่ภายในคอลัมน์หมายเหตุนั้น
                 note_indices = df_cleaned[df_cleaned["หมายเหตุ"].astype(str).str.contains("หมายเหตุ", na=False)].index
@@ -44,17 +50,7 @@ if 'main_upload_file' in st.session_state and st.session_state['main_upload_file
                     df_cleaned = df_cleaned.iloc[:first_stop_idx].copy()
                     st.success(f"✂️ ตรวจพบแถวคั่นปีในคอลัมน์หมายเหตุ ระบบทำการตัดข้อมูลปีเก่าออกให้เรียบร้อยแล้ว")
 
-            # แสดงผลตารางที่คลีนเรียบร้อยแล้ว
-            st.subheader("📋 ข้อมูลดิบจาก Sheet ที่ 2 (ดึงอัตโนมัติจากไฟล์หน้าหลัก)")
-            st.dataframe(df_cleaned)
-
-            st.subheader("✨ ข้อมูลที่จัดสรรพร้อมนำเข้า ERP (Mapped Data)")
-            st.dataframe(df_cleaned)
-            st.success(f"จัดรูปแบบสำเร็จ! พบข้อมูลของปีล่าสุดทั้งหมด {len(df_cleaned)} รายการ")
-
-    except Exception as e:
-        st.error(f"❌ เกิดข้อผิดพลาดในการประมวลผลข้อมูล: {e}")
-        st.info("💡 คำแนะนำ: ตรวจสอบโครงสร้างหัวคอลัมน์ใน Sheet ที่ 2 ของไฟล์ Excel")
-
-else:
-    st.warning("⚠️ ยังไม่มีข้อมูลในระบบ หรือระบบหาไฟล์จากหน้าหลักไม่เจอ กรุณาอัปโหลดไฟล์ที่หน้าหลัก (app.py) ก่อนเริ่มใช้งาน")
+            # --- 🟢 ส่วนที่แก้ไขหลักเพื่อแก้ปัญหา JSON Invalid Token NaN ---
+            # แปลงค่า NaN หรือค่าว่างในทุกๆ ช่องของตารางให้กลายเป็นค่าว่าง "" หรือข้อความที่ระบุได้ เพื่อให้ปลอดภัยต่อ JSON
+            df_display = df_cleaned.replace({np.nan: "", None: ""})
+            # บ
