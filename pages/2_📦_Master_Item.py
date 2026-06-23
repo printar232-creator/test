@@ -25,9 +25,9 @@ if 'df_item' in st.session_state and not st.session_state['df_item'].empty:
     #if total_cols > 1: mapped_df['Buyer'] = cleaned_df.iloc[:, 1]             # ผู้ซื้อ
     if total_cols > 2: mapped_df['Received_From'] = cleaned_df.iloc[:, 2]     # ได้รับจาก
     if total_cols > 3: mapped_df['Item_Description'] = cleaned_df.iloc[:, 3]  # รายการ
-    if total_cols > 4: mapped_df['Item_Code'] = cleaned_df.iloc[:, 4]         # รหัส
+    #if total_cols > 4: mapped_df['Item_Code'] = cleaned_df.iloc[:, 4]         # รหัส
     if total_cols > 5: mapped_df['Quantity'] = cleaned_df.iloc[:, 5]          # จำนวน
-    if total_cols > 6: mapped_df['Base_UOM'] = cleaned_df.iloc[:, 6]          # หน่วย
+    #if total_cols > 6: mapped_df['Base_UOM'] = cleaned_df.iloc[:, 6]          # หน่วย
     if total_cols > 7: mapped_df['Price_Per_Unit'] = cleaned_df.iloc[:, 7]    # ราคา/หน่วย
     if total_cols > 8: mapped_df['Amount'] = cleaned_df.iloc[:, 8]            # จำนวนเงิน
     if total_cols > 9: mapped_df['Total_Value'] = cleaned_df.iloc[:, 9]       # มูลค่ารวม
