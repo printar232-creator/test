@@ -4,42 +4,60 @@ import pandas as pd
 st.title("📦 Module: ข้อมูลสินค้าและวัตถุดิบ (Item Master)")
 
 if 'df_item' in st.session_state and not st.session_state['df_item'].empty:
-    # 1. คัดลอกข้อมูลมาประมวลผล
+    # คัดลอกข้อมูลดิบมาประมวลผล
     raw_df = st.session_state['df_item'].copy()
     
-    st.subheader("📋 ข้อมูลดิบที่ดึงมาจาก Session State")
-    st.dataframe(raw_df, use_container_width=True)
-
-    # 2. ล้างช่องว่างและแถวขยะ (ลบแถวที่เป็นช่องว่างทั้งหมดออกก่อน)
+    # ==========================================
+    # 🧼 STEP 1: จัดการเซ็ตหัวตารางภาษาไทยให้ถูกต้อง
+    # ==========================================
+    # ลบแถวที่เป็นช่องว่างทั้งหมดออกก่อน (พวก Row 0 ที่เป็น None)
     cleaned_df = raw_df.dropna(how='all').reset_index(drop=True)
     
-    # 3. ตรวจสอบและตัดแถวที่เป็นหัวตารางภาษาไทยออก (ถ้าแถวแรกมีคำว่า 'รหัส' หรือ 'รายการ')
     if len(cleaned_df) > 0:
-        first_row_str = cleaned_df.iloc[0].astype(str).tolist()
-        if any('รหัส' in str(val) or 'รายการ' in str(val) for val in first_row_str):
+        # ตรวจสอบว่า แถวแรกสุด มีคำว่า 'วันที่' หรือ 'รหัส' หรือไม่ 
+        # ถ้าใช่ แสดงว่าแถวนี้คือ "หัวตารางภาษาไทย" ที่เราต้องการนำมาใช้เป็นคอลัมน์
+        first_row = cleaned_df.iloc[0].astype(str).tolist()
+        if any(kw in str(val) for kw in ['วันที่', 'ผู้ซื้อ', 'รหัส', 'รายการ'] for val in first_row):
+            # ดึงข้อความในแถวแรกมาทำเป็นชื่อคอลัมน์ (Columns Name)
+            new_columns = cleaned_df.iloc[0].tolist()
+            
+            # ป้องกันกรณีบางคอลัมน์เป็นค่าว่าง (None/NaN) ให้ตั้งชื่อแทนด้วย Index ตัวเลข
+            new_columns = [str(col) if pd.notna(col) and str(col).strip() != "" else f"Col_{i}" for i, col in enumerate(new_columns)]
+            
+            cleaned_df.columns = new_columns
+            # ตัดแถวแรกที่เป็นหัวตารางออกไป (เพราะเอาขึ้นไปเป็นชื่อคอลัมน์แล้ว)
             cleaned_df = cleaned_df.iloc[1:].reset_index(drop=True)
 
+    # ==========================================
+    # 📋 STEP 2: แสดงผลข้อมูลดิบทุกคอลัมน์ (หลังคลีนหัวตารางแล้ว)
+    # ==========================================
+    st.subheader("📋 ข้อมูลดิบจากไฟล์ (ทุกคอลัมน์)")
+    st.dataframe(cleaned_df, use_container_width=True)
+
+    # ==========================================
+    # ✨ STEP 3: ข้อมูลที่จัดสรรพร้อมนำเข้า ERP (Mapped Data)
+    # ==========================================
     st.subheader("✨ ข้อมูลที่จัดสรรพร้อมนำเข้า ERP (Mapped Data)")
     
-    # สร้าง DataFrame สำหรับ ERP
     mapped_df = pd.DataFrame()
     
-    # ดึงข้อมูลตามโครงสร้างคอลัมน์จริงจากภาพแรก (รหัสอยู่คอลัมน์ที่ 5, รายการอยู่คอลัมน์ที่ 4)
-    # ใช้ `.iloc` บนตารางที่คลีนแล้ว จะปลอดภัยและไม่หลุดตำแหน่ง
-    if len(cleaned_df.columns) > 4:
-        mapped_df['Item_Code'] = cleaned_df.iloc[:, 4]        # คอลัมน์ "รหัส"
-    else:
-        mapped_df['Item_Code'] = "N/A"
-        
-    if len(cleaned_df.columns) > 3:
-        mapped_df['Item_Description'] = cleaned_df.iloc[:, 3] # คอลัมน์ "รายการ"
-    else:
-        mapped_df['Item_Description'] = "N/A"
-        
-    mapped_df['Base_UOM'] = "Pcs"                             # หน่วยนับเริ่มต้น
+    # ดึงข้อมูลจากคอลัมน์ที่ตั้งชื่อใหม่แล้วอย่างปลอดภัย
+    # โค้ดจะพยายามหาคำว่า 'รหัส' และ 'รายการ' จากชื่อคอลัมน์ภาษาไทยใหม่ทันที
+    code_col = [c for c in cleaned_df.columns if 'รหัส' in c]
+    desc_col = [c for c in cleaned_df.columns if 'รายการ' in c]
+    uom_col = [c for c in cleaned_df.columns if 'หน่วย' in c] # ลองหาคอลัมน์หน่วยนับ (ใบ, ตัว) จากตารางดิบ
+    
+    # 🎯 แมปค่าเข้าสู่คอลัมน์ ERP
+    mapped_df['Item_Code'] = cleaned_df[code_col[0]] if code_col else "N/A"
+    mapped_df['Item_Description'] = cleaned_df[desc_col[0]] if desc_col else "N/A"
+    
+    # ถ้าในตารางดิบมีหน่วยนับ (เช่น ใบ, ตัว) ให้เอามาใช้แทน "Pcs" ได้เลยครับ
+    mapped_df['Base_UOM'] = cleaned_df[uom_col[0]] if uom_col else "Pcs"
 
-    # เคลียร์ค่าว่างที่อาจหลงเหลือในตารางใหม่
+    # จัดการล้างแถวที่ข้อมูลหลักเป็นค่าว่างออกเพื่อความสะอาด
     mapped_df = mapped_df.dropna(subset=['Item_Code', 'Item_Description'], how='all')
+    # ป้องกันค่าที่เป็นเครื่องหมายขีด '-' หรือคำว่างๆ หลุดไปเป็นรหัสสินค้า
+    mapped_df = mapped_df[mapped_df['Item_Code'].astype(str).str.strip() != "-"]
     mapped_df = mapped_df.reset_index(drop=True)
 
     # แสดงผลตารางที่แมปข้อมูลแล้ว
