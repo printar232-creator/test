@@ -4,42 +4,48 @@ import io
 
 st.title("🧾 Module: สมุดบัญชีแยกประเภทและยอดหมุนเวียน (G/L Balances)")
 
-if 'df_gl' in st.session_state:
+# 🟢 [จุดแก้ไขสำคัญ] ล็อกตัวไฟล์ดิบไว้ใน Session State ของหน้าย่อยทันทีเพื่อป้องกันการเลือนหาย
+if "upload_g" in st.session_state and st.session_state["upload_g"] is not None:
+    # ฝากไฟล์ดิบเข้าตัวแปรส่วนตัวของโมดูลนี้
+    st.session_state["gl_file_backup"] = st.session_state["upload_g"]
+
+# ตรวจสอบว่ามีข้อมูลจากหน้าหลักหรือมีไฟล์สำรองหรือไม่
+if 'df_gl' in st.session_state or "gl_file_backup" in st.session_state:
     
-    # บังคับอ่านไฟล์จาก Memory และเคลียร์ตัวแปรชั่วคราวเพื่อไม่ให้ดึงอันเก่ามาใช้
     df = None
     
     try:
-        file_gl_raw = st.session_state.get("upload_g")
+        # เรียกใช้ไฟล์จากตัวจำค่าสำรองที่เราล็อกไว้
+        file_gl_raw = st.session_state.get("gl_file_backup")
         
         if file_gl_raw is not None:
-            # ใช้ BytesIO อ่านข้อมูลสดๆ จากตัวไฟล์อัปโหลด
-            file_bytes = file_gl_raw.getvalue()
+            # ใช้การเข้าถึงข้อมูลแบบ Binary สดๆ 
+            file_bytes = file_gl_raw.getvalue() if hasattr(file_gl_raw, 'getvalue') else file_gl_raw
+            
+            # บังคับอ่านด้วยสเปกที่เจาะลึก
             excel_file = pd.ExcelFile(io.BytesIO(file_bytes))
             sheet_names = excel_file.sheet_names
             
-            # ตรวจสอบว่าในไฟล์มีกี่ Sheet
             if len(sheet_names) > 1:
-                target_sheet = sheet_names[1] # เจาะจงเลือก Sheet ลำดับที่ 2
+                # เจาะจงเลือก Sheet ลำดับที่ 2 (Index 1)
+                target_sheet = sheet_names[1]
+                st.info(f"📂 ค้นพบแผ่นงานทั้งหมด: {sheet_names} -> กำลังเจาะจงอ่านแผ่นงานที่ 2 คือ: **{target_sheet}**")
                 
-                # แสดงข้อความบอกให้ผู้ใช้ทราบว่าระบบกำลังอ่าน Sheet ไหนอยู่จริงๆ
-                st.caption(f"📂 กำลังดึงข้อมูลจากแผ่นงานลำดับที่ 2 ชื่อว่า: **{target_sheet}**")
-                
-                # สั่งโหลดข้อมูลใหม่แบบบังคับเจาะชื่อ Sheet ตัวที่ 2
-                df = pd.read_excel(io.BytesIO(file_bytes), sheet_name=target_sheet, header=None)
+                # อ่านไฟล์โดยบังคับ Engine ให้ชัดเจน
+                df = pd.read_excel(io.BytesIO(file_bytes), sheet_name=1, header=None, engine='openpyxl')
             else:
-                st.error(f"❌ ไฟล์นี้มีแค่ Sheet เดียวคือ '{sheet_names[0]}' ไม่พบ Sheet ที่ 2 ในไฟล์ของคุณ")
-                df = st.session_state['df_gl']
+                st.error(f"❌ ไฟล์นี้มีแค่ Sheet เดียวคือ '{sheet_names[0]}' ไม่พบ Sheet อื่นๆ ในไฟล์")
+                df = st.session_state.get('df_gl')
         else:
-            df = st.session_state['df_gl']
+            df = st.session_state.get('df_gl')
             
     except Exception as e:
-        st.warning(f"⚠️ เกิดข้อผิดพลาดในการเจาะอ่าน Sheet 2: {e}")
-        df = st.session_state['df_gl']
+        st.warning(f"⚠️ กำลังสลับไปใช้ระบบสำรองอัตโนมัติเนื่องจาก: {e}")
+        df = st.session_state.get('df_gl')
 
-    # ถ้าดึงข้อมูลมาได้สำเร็จ (ไม่เป็น None) ให้รันการ Mapping ต่อ
+    # ประมวลผลและจัดทำ Mapped Data
     if df is not None:
-        st.subheader(f"📋 ข้อมูลดิบที่ดึงมาจาก Sheet ลำดับที่ 2")
+        st.subheader("📋 ข้อมูลดิบที่ดึงมาจาก Sheet ลำดับที่ 2")
         st.dataframe(df)
 
         st.subheader("✨ ข้อมูลที่จัดสรรพร้อมนำเข้า ERP (Mapped Data)")
