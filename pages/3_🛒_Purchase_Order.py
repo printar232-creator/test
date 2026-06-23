@@ -15,7 +15,7 @@ if 'main_upload_file' in st.session_state and st.session_state['main_upload_file
             st.error(f"❌ ไม่สามารถดึงข้อมูล Sheet ที่ 2 ได้: {e}")
             st.info("💡 คำแนะนำ: ตรวจสอบว่าไฟล์ Excel ที่อัปโหลดมีอย่างน้อย 2 Sheet หรือไม่")
 
-# 3. ส่วนการแสดงผล (ข้อมูลดึงจากความจำเฉพาะหน้านี้ สลับหน้าแล้วไม่หาย)
+# 3. ส่วนการแสดงผล
 if 'df_po_sheet2' in st.session_state:
     df_raw = st.session_state['df_po_sheet2']
     
@@ -28,15 +28,26 @@ if 'df_po_sheet2' in st.session_state:
         # ตัดแถวแรกทิ้ง แล้วตั้งชื่อคอลัมน์ใหม่ตามหัวภาษาไทย
         df_cleaned = df_raw.iloc[1:].copy()
         df_cleaned.columns = new_header
-        
-        # 🟢 จุดที่แก้ไข SyntaxError: รีเซ็ตดัชนีแถวให้ถูกต้อง
         df_cleaned.reset_index(drop=True, inplace=True)
         
+        # --- 🟢 ส่วนที่แก้ไข: เจาะจงค้นหาคำว่า "หมายเหตุ" ภายในคอลัมน์ "หมายเหตุ" เท่านั้น ---
+        if "หมายเหตุ" in df_cleaned.columns:
+            # สแกนหาแถวที่มีคำว่า "หมายเหตุ" ซ่อนอยู่ในคอลัมน์หมายเหตุ
+            note_indices = df_cleaned[df_cleaned["หมายเหตุ"].astype(str).str.contains("หมายเหตุ", na=False)].index
+            
+            if not note_indices.empty:
+                # เจอคำว่าหมายเหตุคั่นปีตรงไหน ตัดข้อมูลตั้งแต่แถวนั้นลงไปทิ้งทั้งหมด
+                first_stop_idx = note_indices[0]
+                df_cleaned = df_cleaned.iloc[:first_stop_idx].copy()
+                st.success(f"✂️ ตรวจพบแถวคั่นปีในคอลัมน์หมายเหตุ ระบบทำการตัดข้อมูลปีเก่าออกให้เรียบร้อยแล้ว")
+        # ---------------------------------------------------------------------------------
+
         st.subheader("📋 ข้อมูลดิบจาก Sheet ที่ 2 (ดึงอัตโนมัติจากไฟล์หน้าหลัก)")
         st.dataframe(df_cleaned)
 
         st.subheader("✨ ข้อมูลที่จัดสรรพร้อมนำเข้า ERP (Mapped Data)")
         st.dataframe(df_cleaned)
-        st.success(f"จัดรูปแบบหัวคอลัมน์สำเร็จ! พบข้อมูลทั้งหมด {len(df_cleaned)} รายการ")
+        
+        st.success(f"จัดรูปแบบสำเร็จ! พบข้อมูลของปีล่าสุดทั้งหมด {len(df_cleaned)} รายการ")
 else:
     st.warning("⚠️ ยังไม่มีข้อมูลในระบบ กรุณาอัปโหลดไฟล์ที่หน้าหลัก (app.py) ก่อนเริ่มใช้งาน")
