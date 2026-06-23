@@ -17,25 +17,29 @@ if 'main_upload_file' in st.session_state and st.session_state['main_upload_file
 
 # 3. ส่วนการแสดงผล (ข้อมูลดึงจากความจำเฉพาะหน้านี้ สลับหน้าแล้วไม่หาย)
 if 'df_po_sheet2' in st.session_state:
-    df = st.session_state['df_po_sheet2']
+    df_raw = st.session_state['df_po_sheet2']
     
-    st.subheader("📋 ข้อมูลดิบจาก Sheet ที่ 2 (ดึงอัตโนมัติจากไฟล์หน้าหลัก)")
-    st.dataframe(df)
-
-    st.subheader("✨ ข้อมูลที่จัดสรรพร้อมนำเข้า ERP (Mapped Data - ทุกคอลัมน์)")
-    
-    if df.empty:
+    if df_raw.empty:
         st.warning("⚠️ พบข้อมูลในระบบ แต่ไม่มีรายการข้อมูลใน Sheet นี้ (0 แถว)")
     else:
-        # 🟢 ส่วนที่แก้ไข: วนลูปดึงข้อมูลมาทุกคอลัมน์ตามไฟล์จริง
-        mapped_data = {}
-        for col_idx in range(df.shape[1]):
-            # ตั้งชื่อคอลัมน์ชั่วคราวเป็น Column_0, Column_1, ... ให้เหมือนกับโครงสร้างข้อมูลดิบ
-            mapped_data[f'Column_{col_idx}'] = df.iloc[:, col_idx]
-            
-        mapped_df = pd.DataFrame(mapped_data)
+        # --- 🟢 ส่วนที่แก้ไข: ดันแถวแรกขึ้นเป็นหัวข้อคอลัมน์ (Header Replacement) ---
+        # นำค่าในแถวแรก (index 0) มาแปลงเป็นลิสต์ชื่อคอลัมน์
+        new_header = df_raw.iloc[0].astype(str).tolist()
         
-        st.dataframe(mapped_df)
-        st.success(f"จับคู่ข้อมูล Transaction PO จาก Sheet ที่ 2 สำเร็จทั้งหมด {df.shape[1]} คอลัมน์ (รวม {len(df)} รายการ)")
+        # ตัดแถวแรกทิ้ง (เหลือตั้งแต่แถว index 1 เป็นต้นไป) แล้วตั้งชื่อคอลัมน์ใหม่
+        df_cleaned = df_raw.iloc[1:].copy()
+        df_cleaned.columns = new_header
+        
+        # รีเซ็ต index ของแถวใหม่ให้เริ่มจาก 0 จะได้ดูง่ายๆ
+        df_cleaned.reset_index(drop=True, inplace=self_or_df=df_cleaned)
+        
+        st.subheader("📋 ข้อมูลดิบจาก Sheet ที่ 2 (ดึงอัตโนมัติจากไฟล์หน้าหลัก)")
+        st.dataframe(df_cleaned)
+
+        st.subheader("✨ ข้อมูลที่จัดสรรพร้อมนำเข้า ERP (Mapped Data)")
+        
+        # แสดงผลตารางเดียวกันที่จัดเรียงความสวยงามเรียบร้อยแล้ว
+        st.dataframe(df_cleaned)
+        st.success(f"จัดรูปแบบหัวคอลัมน์สำเร็จ! พบข้อมูลทั้งหมด {len(df_cleaned)} รายการ")
 else:
     st.warning("⚠️ ยังไม่มีข้อมูลในระบบ หรือระบบหาไฟล์จากหน้าหลักไม่เจอ กรุณาอัปโหลดไฟล์ที่หน้าหลัก (app.py) ก่อนเริ่มใช้งาน")
