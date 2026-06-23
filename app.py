@@ -17,7 +17,12 @@ def load_data(file):
         return pd.read_excel(file, engine='xlrd', header=None)     # เพิ่ม header=None
     else:
         return pd.read_csv(file, header=None)                      # เพิ่ม header=None
+# สมมติตัวแปรไฟล์ของคุณชื่อ uploaded_file (หรือตามที่โค้ดเดิมตั้งไว้)
+uploaded_file = st.file_uploader("...") 
 
+if uploaded_file is not None:
+    # 🟢 เพิ่มบรรทัดนี้บรรทัดเดียวเลยครับ! เพื่อแอบฝากไฟล์ดิบข้ามหน้า
+    st.session_state['main_upload_file'] = uploaded_file
 # สร้าง Layout กล่องอัปโหลดแบบ 2x2 เพื่อความสวยงาม
 col1, col2 = st.columns(2)
 
