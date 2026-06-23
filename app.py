@@ -9,7 +9,6 @@ st.markdown("---")
 st.write("### 📥 ขั้นตอน: อัปโหลดไฟล์ทั้ง 4 ให้ครบ จากนั้นเลือกดูข้อมูลในแต่ละโมดูลที่แถบด้านซ้าย")
 
 # ฟังก์ชันกลางสำหรับอ่านไฟล์รองรับ xlsx, xls, csv
-# แก้ไขฟังก์ชันดึงข้อมูลในไฟล์ app.py ให้เป็นแบบนี้
 def load_data(file):
     if file.name.endswith('.xlsx'):
         return pd.read_excel(file, engine='openpyxl', header=None) # เพิ่ม header=None
@@ -39,6 +38,8 @@ with col2:
     file_po = st.file_uploader("3. อัปโหลดไฟล์ Open PO (.csv, .xlsx, .xls)", type=['csv', 'xlsx', 'xls'], key="upload_p")
     if file_po:
         st.session_state['df_po'] = load_data(file_po)
+        # 🟢 ส่วนที่เพิ่ม: แอบเก็บไฟล์ดิบไว้เพื่อส่งข้ามหน้าไปให้ Module PO แกะ Sheet 2
+        st.session_state['main_upload_file'] = file_po
         st.success("✅ บันทึกข้อมูล Purchase Order แล้ว")
 
     # 4. Financial GL File
