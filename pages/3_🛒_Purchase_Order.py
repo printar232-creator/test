@@ -57,31 +57,12 @@ if df is not None:
         st.warning("⚠️ พบข้อมูลในระบบ แต่ไม่มีรายการข้อมูลในแผ่นงานนี้ (0 แถว)")
     else:
         start_row = 0
+        # 🟢 [แก้ไขจุด TypeError] แปลงค่าทุกช่องในแถวให้เป็น string ก่อนการเปรียบเทียบ keyword
         for idx, row in df.iterrows():
-            row_str = row.astype(str).values
-            if any(keyword in s for s in row_str for keyword in ['วันที่', 'Date', 'ใบสั่งซื้อ', 'PO', 'ออเดอร์', 'ลูกค้า']):
+            row_str_list = [str(s) for s in row.values]
+            if any(keyword in s for s in row_str_list for keyword in ['วันที่', 'Date', 'ใบสั่งซื้อ', 'PO', 'ออเดอร์', 'ลูกค้า']):
                 start_row = idx
                 break
+        
         clean_df = df.iloc[start_row:].reset_index(drop=True)
-        headers = clean_df.iloc[0].fillna("").astype(str).tolist()
-        headers = [f"คอลัมน์_{i}" if h == "" else h for i, h in enumerate(headers)]
-        mapped_df = clean_df.iloc[1:].reset_index(drop=True)
-        mapped_df.columns = headers
-        st.dataframe(mapped_df, use_container_width=True)
-        qty_col = None
-        for col in mapped_df.columns:
-            if any(keyword in col for keyword in ['จำนวน', 'Qty', 'Quantity', 'MT', 'ยอดรวม', 'Amount']):
-                qty_col = col
-                break
-        total_records = len(mapped_df)
-        col1, col2 = st.columns(2)
-        with col1:
-            st.metric(label="📊 จำนวนรายการทั้งหมดที่พบ", value=f"{total_records:,} รายการ")
-        with col2:
-            if qty_col:
-                numeric_series = pd.to_numeric(mapped_df[qty_col], errors='coerce').fillna(0)
-                total_sum = numeric_series.sum()
-                st.metric(label=f"📦 ยอดรวมในคอลัมน์ ({qty_col})", value=f"{total_sum:,.2f}")
-            else:
-                st.metric(label="📦 ยอดรวมเชิงปริมาณ", value="ไม่พบคอลัมน์ตัวเลขบนไฟล์นี้")
-        st.success(f"🎉 ดึงและจัดสรรข้อมูลจากไฟล์จริงสำเร็จทั้งหมด {mapped_df.shape[1]} คอลัมน์")
+        headers
