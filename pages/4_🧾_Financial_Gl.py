@@ -76,8 +76,8 @@ if df is not None:
 
     st.subheader("✨ ข้อมูลที่จัดสรรพร้อมนำเข้า ERP (Mapped Data)")
     
-    # ข้าม 6 แถวแรกที่เป็นหัวรายงานภาษาไทย และรีเซ็ตอินเดกซ์ใหม่ให้เริ่มจาก 0
-    clean_df = df.iloc[6:].reset_index(drop=True)
+    # ข้าม 2 แถวแรกที่เป็นหัวรายงานภาษาไทย และรีเซ็ตอินเดกซ์ใหม่ให้เริ่มจาก 0
+    clean_df = df.iloc[2:].reset_index(drop=True)
     
     # สร้าง DataFrame ใหม่เพื่อ mapping ตามโครงสร้างจริงจากรูปภาพ
     mapped_df = pd.DataFrame()
