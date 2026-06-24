@@ -90,5 +90,20 @@ if df is not None:
     
     st.dataframe(mapped_df, use_container_width=True)
     
+    # 🟢 [แก้ไขจุดพิมตก] เปลี่ยนจาก mapped_ เป็น mapped_df ทั้งหมดเพื่อให้คำนวณได้ถูกต้อง
     total_debit = mapped_df['Debit_Amount'].sum()
-    total_credit = mapped_
+    total_credit = mapped_df['Credit_Amount'].sum()
+    balance_diff = total_debit - total_credit
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric(label="ยอดรวม Debit", value=f"{total_debit:,.2f} บาท")
+    with col2:
+        st.metric(label="ยอดรวม Credit", value=f"{total_credit:,.2f} บาท")
+    with col3:
+        st.metric(
+            label="ผลต่าง (ต้องเป็น 0)", 
+            value=f"{balance_diff:,.2f} บาท",
+            delta=f"{balance_diff:,.2f} บาท" if balance_diff != 0 else None,
+            delta_color="inverse" if balance_diff != 0 else "normal"
+        )
