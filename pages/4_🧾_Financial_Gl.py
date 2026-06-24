@@ -2,21 +2,24 @@ import streamlit as st
 import pandas as pd
 import io
 
-st.set_page_config(page_title="G/L Balances Module", page_icon="💰", layout="wide") # เพิ่มตั้งค่าหน้ากระดาษ
+st.set_page_config(page_title="G/L Balances Module", page_icon="💰", layout="wide")
 st.title("🧾 Module: สมุดบัญชีแยกประเภทและยอดหมุนเวียน (G/L Balances)")
 
-# ตรวจสอบการอัปโหลดไฟล์จากหน้าหลัก
-if 'df_gl' in st.session_state or "upload_g" in st.session_state:
+# 1. ตรวจสอบสถานะข้อมูลจากหน้าหลัก
+has_df = 'df_gl' in st.session_state
+has_raw_file = 'upload_g' in st.session_state and st.session_state['upload_g'] is not None
+
+if has_df or has_raw_file:
     
-    file_gl_raw = st.session_state.get("upload_g")
     df = None
+    file_gl_raw = st.session_state.get("upload_g")
     
-    if file_gl_raw is not None and file_gl_raw.name.endswith(('.xlsx', '.xls')):
+    # 2. เคสที่ 1: ตรวจพบไฟล์ดิบในระบบอัตโนมัติ (และเป็น Excel)
+    if file_gl_raw is not None and hasattr(file_gl_raw, 'name') and file_gl_raw.name.endswith(('.xlsx', '.xls')):
         try:
-            # ดึงไบต์ไฟล์สดเพื่อเข้าไปอ่านโครงสร้างแผ่นงานทั้งหมดที่มี
             file_bytes = file_gl_raw.getvalue()
             
-            # ปรับปรุง: เลือก engine ให้เหมาะกับนามสกุลไฟล์อัตโนมัติ
+            # เลือก engine ให้ตรงกับนามสกุลไฟล์
             selected_engine = 'openpyxl' if file_gl_raw.name.endswith('.xlsx') else 'xlrd'
             excel_file = pd.ExcelFile(io.BytesIO(file_bytes), engine=selected_engine)
             all_sheets = excel_file.sheet_names
@@ -24,27 +27,31 @@ if 'df_gl' in st.session_state or "upload_g" in st.session_state:
             st.markdown("---")
             st.markdown("### 🔍 ตรวจพบแผ่นงานในไฟล์ของคุณ")
             
-            # สร้าง Dropdown ให้ผู้ใช้เลือก Sheet เอง
+            # สร้าง Dropdown ให้เลือก Sheet
             selected_sheet = st.selectbox(
                 "กรุณาเลือกแผ่นงาน (Sheet) ที่ถูกต้องสำหรับหน้าสมุดบัญชีแยกประเภท:",
                 options=all_sheets,
-                index=1 if len(all_sheets) > 1 else 0  # ตั้งค่าเริ่มต้นให้ชี้ไปที่ Sheet ลำดับที่ 2
+                index=1 if len(all_sheets) > 1 else 0  # ตั้งค่าเริ่มต้นไปที่ Sheet ลำดับที่ 2
             )
             
-            # บังคับอ่านข้อมูลจากแผ่นงานที่เลือกทันที
+            # บังคับอ่านข้อมูลจากแผ่นงานที่เลือก
             df = pd.read_excel(io.BytesIO(file_bytes), sheet_name=selected_sheet, header=None, engine=selected_engine)
             st.success(f"📋 ดึงข้อมูลจากแผ่นงาน: **'{selected_sheet}'** สำเร็จ")
             
         except Exception as e:
-            st.error(f"❌ ระบบไม่สามารถเจาะอ่านไฟล์ Excel ได้: {e}")
+            st.error(f"⚠️ ไม่สามารถเจาะอ่านแผ่นงานเพิ่มเติมได้เนื่องจากเทคนิคไฟล์: {e}")
+            # Fallback ไปใช้ข้อมูลที่หน้าหลักโหลดมาให้ตอนแรก
             df = st.session_state.get('df_gl')
+            
+    # 3. เคสที่ 2: เป็นไฟล์ .csv หรือระบบไม่สามารถดึงไฟล์ดิบย้อนหลังได้
     else:
-        # กรณีที่เป็นไฟล์ประเภทอื่นที่ไม่ใช่ Excel (.csv) หรืออัปโหลดแบบธรรมดา
         df = st.session_state.get('df_gl')
-        if file_gl_raw and file_gl_raw.name.endswith('.csv'):
+        if file_gl_raw and hasattr(file_gl_raw, 'name') and file_gl_raw.name.endswith('.csv'):
             st.info("ℹ️ ตรวจพบเป็นไฟล์เดี่ยว (.csv) ระบบจึงดึงข้อมูลแผ่นงานหลักมาใช้งานโดยอัตโนมัติ")
+        else:
+            st.info("📊 แสดงผลข้อมูลเริ่มต้นจากศูนย์กลาง (Default Sheet)")
 
-    # --- ส่วนการนำข้อมูลไปใช้งานต่อ ---
+    # --- ส่วนการนำข้อมูลไปใช้งานต่อ (คงโครงสร้างเดิมไว้ทั้งหมด) ---
     if df is not None:
         st.subheader("📋 ข้อมูลดิบที่ระบบอ่านได้ในปัจจุบัน")
         st.dataframe(df, use_container_width=True)
@@ -72,7 +79,6 @@ if 'df_gl' in st.session_state or "upload_g" in st.session_state:
         with col2:
             st.metric(label="ยอดรวม Credit", value=f"{total_credit:,.2f} บาท")
         with col3:
-            # ปรับแต่งสีของ Delta ให้เป็นสีแดงเมื่อยอดไม่ดุล (ไม่เท่ากับ 0)
             st.metric(
                 label="ผลต่าง (ต้องเป็น 0)", 
                 value=f"{balance_diff:,.2f} บาท",
