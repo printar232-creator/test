@@ -26,7 +26,7 @@ with col1:
     if file_vendor:
         st.session_state['df_vendor'] = load_data(file_vendor)
         # 🟢 ส่วนที่เพิ่ม: แอบเก็บไฟล์ดิบไว้เพื่อส่งข้ามหน้าไปให้ Module VM แกะ Sheet 2
-        st.session_state['VM_upload_file'] = file_vender
+        st.session_state['VM_upload_file'] = file_vendor
         st.success("✅ บันทึกข้อมูล Vendor แล้ว")
 
     # 2. Item File
