@@ -7,15 +7,19 @@ st.title("📦 Module: ข้อมูลสินค้าและวัตถ
 
 df = None
 
-# 🟢 เปลี่ยนมาตรวจสอบไฟล์จาก 'item_upload_file' (ช่องที่ 2 ของหน้าหลัก) โดยตรงเพื่อความแม่นยำ
-if 'item_upload_file' in st.session_state and st.session_state['item_upload_file'] is not None:
-    file_item_raw = st.session_state['item_upload_file']
+# 🟢 แก้ไขคีย์ตรงนี้ให้ตรงกับหน้าหลัก (จาก 'item_upload_file' เป็น 'IM_upload_file')
+if 'IM_upload_file' in st.session_state and st.session_state['IM_upload_file'] is not None:
+    file_item_raw = st.session_state['IM_upload_file']
+    
     if hasattr(file_item_raw, 'name') and file_item_raw.name.endswith(('.xlsx', '.xls')):
         if 'item_sheets_dict' not in st.session_state:
             try:
+                # ปลอดภัยไว้ก่อน รีเซ็ตตำแหน่งตัวอ่านไฟล์กลับมาจุดเริ่มต้น
                 file_item_raw.seek(0)
                 file_bytes = file_item_raw.getvalue()
                 selected_engine = 'openpyxl' if file_item_raw.name.endswith('.xlsx') else 'xlrd'
+                
+                # ดึงข้อมูลทุกชีตเก็บเข้า session_state
                 st.session_state['item_sheets_dict'] = pd.read_excel(
                     io.BytesIO(file_bytes),
                     sheet_name=None,
@@ -25,7 +29,9 @@ if 'item_upload_file' in st.session_state and st.session_state['item_upload_file
             except Exception as e:
                 st.error(f"❌ ไม่สามารถดึงโครงสร้างแผ่นงานได้: {e}")
 
-# ส่วนแสดงผลแถบเลือกแผ่นงาน (Sheet Selector)
+# =========================================================
+# ส่วนแสดงผลแถบเลือกแผ่นงาน (สลับมาใช้ตรงนี้ได้แล้ว)
+# =========================================================
 if 'item_sheets_dict' in st.session_state:
     sheets_data = st.session_state['item_sheets_dict']
     all_sheets = list(sheets_data.keys())
@@ -47,13 +53,14 @@ if 'item_sheets_dict' in st.session_state:
     )
     df = sheets_data[selected_sheet]
     st.success(f"📋 ดึงข้อมูลจากแผ่นงาน: **'{selected_sheet}'** สำเร็จ")
+
 elif 'df_item' in st.session_state:
     df = st.session_state['df_item']
     st.info("ℹ️ ตรวจพบเป็นข้อมูลจากไฟล์เดี่ยว (.csv) ระบบดึงข้อมูลแผ่นงานหลักมาใช้งานโดยอัตโนมัติ")
 else:
     st.warning("⚠️ ยังไม่มีข้อมูลในระบบ กรุณากลับไปอัปโหลดไฟล์ในช่อง '2. อัปโหลดไฟล์ Item Master' ที่หน้าหลักก่อนเริ่มใช้งาน")
 
-# ส่วนจัดการและจัดสรรข้อมูล (Mapping)
+# ส่วนจัดการและจัดสรรข้อมูล (Mapping) คงเดิม
 if df is not None:
     cleaned_df = df.dropna(how='all').reset_index(drop=True)
     
