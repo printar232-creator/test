@@ -25,12 +25,16 @@ with col1:
     file_vendor = st.file_uploader("1. อัปโหลดไฟล์ Vendor Master (.csv, .xlsx, .xls)", type=['csv', 'xlsx', 'xls'], key="upload_v")
     if file_vendor:
         st.session_state['df_vendor'] = load_data(file_vendor)
+        # 🟢 ส่วนที่เพิ่ม: แอบเก็บไฟล์ดิบไว้เพื่อส่งข้ามหน้าไปให้ Module VM แกะ Sheet 2
+        st.session_state['VM_upload_file'] = file_po
         st.success("✅ บันทึกข้อมูล Vendor แล้ว")
 
     # 2. Item File
     file_item = st.file_uploader("2. อัปโหลดไฟล์ Item Master (.csv, .xlsx, .xls)", type=['csv', 'xlsx', 'xls'], key="upload_i")
     if file_item:
         st.session_state['df_item'] = load_data(file_item)
+        # 🟢 ส่วนที่เพิ่ม: แอบเก็บไฟล์ดิบไว้เพื่อส่งข้ามหน้าไปให้ Module IM แกะ Sheet 2
+        st.session_state['IM_upload_file'] = file_po
         st.success("✅ บันทึกข้อมูล Item แล้ว")
 
 with col2:
