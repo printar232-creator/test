@@ -46,6 +46,8 @@ with col2:
     file_gl = st.file_uploader("4. อัปโหลดไฟล์ G/L Balances (.csv, .xlsx, .xls)", type=['csv', 'xlsx', 'xls'], key="upload_g")
     if file_gl:
         st.session_state['df_gl'] = load_data(file_gl)
+        # 🟢 ส่วนที่เพิ่ม: แอบเก็บไฟล์ดิบไว้เพื่อส่งข้ามหน้าไปให้ Module GL แกะ Sheet 2
+        st.session_state['gl_upload_file'] = file_gl
         st.success("✅ บันทึกข้อมูล Financial G/L แล้ว")
 
 st.markdown("---")
