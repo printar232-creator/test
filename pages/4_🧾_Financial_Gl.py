@@ -14,12 +14,10 @@ if has_df or has_raw_file:
     df = None
     file_gl_raw = st.session_state.get("upload_g")
     
-    # 2. เคสที่ 1: ตรวจพบไฟล์ดิบในระบบอัตโนมัติ (และเป็น Excel)
+    # 2. เคสที่ 1: ตรวจพบไฟล์ดิบในระบบ (และเป็น Excel)
     if file_gl_raw is not None and hasattr(file_gl_raw, 'name') and file_gl_raw.name.endswith(('.xlsx', '.xls')):
         try:
             file_bytes = file_gl_raw.getvalue()
-            
-            # เลือก engine ให้ตรงกับนามสกุลไฟล์
             selected_engine = 'openpyxl' if file_gl_raw.name.endswith('.xlsx') else 'xlrd'
             excel_file = pd.ExcelFile(io.BytesIO(file_bytes), engine=selected_engine)
             all_sheets = excel_file.sheet_names
@@ -27,20 +25,26 @@ if has_df or has_raw_file:
             st.markdown("---")
             st.markdown("### 🔍 ตรวจพบแผ่นงานในไฟล์ของคุณ")
             
-            # สร้าง Dropdown ให้เลือก Sheet
+            # 🟢 [จุดแก้ไขวิกฤต] ใช้ key="gl_sheet_choice" เพื่อล็อกค่าที่เลือกไว้ไม่ให้หายไปตอน Rerun
+            # และหา index ล่าสุดที่ผู้ใช้เคยเลือกไว้ (ถ้าไม่มี ให้เริ่มที่ลำดับ 2 หรือ 1 ตามเงื่อนไขคุณ)
+            if "gl_sheet_choice" in st.session_state and st.session_state["gl_sheet_choice"] in all_sheets:
+                default_index = all_sheets.index(st.session_state["gl_sheet_choice"])
+            else:
+                default_index = 1 if len(all_sheets) > 1 else 0
+
             selected_sheet = st.selectbox(
                 "กรุณาเลือกแผ่นงาน (Sheet) ที่ถูกต้องสำหรับหน้าสมุดบัญชีแยกประเภท:",
                 options=all_sheets,
-                index=1 if len(all_sheets) > 1 else 0  # ตั้งค่าเริ่มต้นไปที่ Sheet ลำดับที่ 2
+                index=default_index,
+                key="gl_sheet_choice"  # บังคับจำสเตท
             )
             
-            # บังคับอ่านข้อมูลจากแผ่นงานที่เลือก
+            # บังคับอ่านข้อมูลจากแผ่นงานที่ผู้ใช้กดเลือกในปัจจุบัน
             df = pd.read_excel(io.BytesIO(file_bytes), sheet_name=selected_sheet, header=None, engine=selected_engine)
             st.success(f"📋 ดึงข้อมูลจากแผ่นงาน: **'{selected_sheet}'** สำเร็จ")
             
         except Exception as e:
             st.error(f"⚠️ ไม่สามารถเจาะอ่านแผ่นงานเพิ่มเติมได้เนื่องจากเทคนิคไฟล์: {e}")
-            # Fallback ไปใช้ข้อมูลที่หน้าหลักโหลดมาให้ตอนแรก
             df = st.session_state.get('df_gl')
             
     # 3. เคสที่ 2: เป็นไฟล์ .csv หรือระบบไม่สามารถดึงไฟล์ดิบย้อนหลังได้
@@ -51,7 +55,7 @@ if has_df or has_raw_file:
         else:
             st.info("📊 แสดงผลข้อมูลเริ่มต้นจากศูนย์กลาง (Default Sheet)")
 
-    # --- ส่วนการนำข้อมูลไปใช้งานต่อ (คงโครงสร้างเดิมไว้ทั้งหมด) ---
+    # --- ส่วนการนำข้อมูลไปใช้งานต่อ (คงเดิม) ---
     if df is not None:
         st.subheader("📋 ข้อมูลดิบที่ระบบอ่านได้ในปัจจุบัน")
         st.dataframe(df, use_container_width=True)
