@@ -5,7 +5,7 @@ import io
 st.set_page_config(page_title="G/L Balances Module", page_icon="💰", layout="wide")
 st.title("🧾 Module: สมุดบัญชีแยกประเภทและยอดหมุนเวียน (G/L Balances)")
 
-# 🟢 [จุดแก้ไขสำคัญ] ประกาศตัวแปรเริ่มต้นไว้ก่อน เพื่อป้องกัน NameError
+# ประกาศตัวแปรเริ่มต้นไว้ก่อน เพื่อป้องกัน NameError
 df = None
 
 # 1. ดึงไฟล์ดิบจากคีย์ 'gl_upload_file' ที่ถูกบันทึกมาจากหน้าหลัก (app.py)
@@ -66,4 +66,29 @@ elif 'df_gl' in st.session_state:
     df = st.session_state['df_gl']
     st.info("ℹ️ ตรวจพบเป็นข้อมูลจากไฟล์เดี่ยว (.csv) ระบบดึงข้อมูลแผ่นงานหลักมาใช้งานโดยอัตโนมัติ")
 else:
-    # 🟢 ย้าย df = None มาประกาศไว้ด้านบนสุดแทนแล้ว จึง
+    st.warning("⚠️ ไม่พบข้อมูลในระบบ กรุณาอัปโหลดไฟล์ที่หน้าหลัก (app.py) ก่อนเริ่มใช้งาน")
+
+
+# --- ส่วนการคำนวณและจัดสรรข้อมูลบัญชี (โค้ดดึงตามโครงสร้างรูปภาพ) ---
+if df is not None:
+    st.subheader("📋 ข้อมูลดิบที่ระบบอ่านได้ในปัจจุบัน")
+    st.dataframe(df, use_container_width=True)
+
+    st.subheader("✨ ข้อมูลที่จัดสรรพร้อมนำเข้า ERP (Mapped Data)")
+    
+    # ข้าม 6 แถวแรกที่เป็นหัวตารางภาษาไทย
+    clean_df = df.iloc[6:].reset_index(drop=True)
+    
+    mapped_df = pd.DataFrame()
+    mapped_df['GL_Account_No'] = clean_df.iloc[:, 1] if len(clean_df.columns) > 1 else "N/A"
+    mapped_df['Account_Name'] = clean_df.iloc[:, 2] if len(clean_df.columns) > 2 else "N/A"
+    mapped_df['Debit_Amount'] = clean_df.iloc[:, 6] if len(clean_df.columns) > 6 else 0
+    mapped_df['Credit_Amount'] = 0 
+    
+    mapped_df['Debit_Amount'] = pd.to_numeric(mapped_df['Debit_Amount'], errors='coerce').fillna(0)
+    mapped_df['Credit_Amount'] = pd.to_numeric(mapped_df['Credit_Amount'], errors='coerce').fillna(0)
+    
+    st.dataframe(mapped_df, use_container_width=True)
+    
+    total_debit = mapped_df['Debit_Amount'].sum()
+    total_credit = mapped_
