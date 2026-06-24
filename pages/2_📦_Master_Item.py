@@ -7,11 +7,10 @@ st.title("📦 Module: ข้อมูลสินค้าและวัตถ
 
 df = None
 
-# 1. ตรวจสอบว่ามีไฟล์ดิบจากหน้าหลักเข้ามาเก็บไว้ในระบบหรือยัง
-if 'main_upload_file' in st.session_state and st.session_state['main_upload_file'] is not None:
-    file_item_raw = st.session_state['main_upload_file']
+# 🟢 เปลี่ยนมาตรวจสอบไฟล์จาก 'item_upload_file' (ช่องที่ 2 ของหน้าหลัก) โดยตรงเพื่อความแม่นยำ
+if 'item_upload_file' in st.session_state and st.session_state['item_upload_file'] is not None:
+    file_item_raw = st.session_state['item_upload_file']
     if hasattr(file_item_raw, 'name') and file_item_raw.name.endswith(('.xlsx', '.xls')):
-        # ใช้คีย์แยกเฉพาะของหน้า item ป้องกันสเตทตีกัน
         if 'item_sheets_dict' not in st.session_state:
             try:
                 file_item_raw.seek(0)
@@ -26,7 +25,7 @@ if 'main_upload_file' in st.session_state and st.session_state['main_upload_file
             except Exception as e:
                 st.error(f"❌ ไม่สามารถดึงโครงสร้างแผ่นงานได้: {e}")
 
-# 2. ส่วนการตรวจสอบและแสดงผลแถบเลือกแผ่นงาน (Sheet Selector)
+# ส่วนแสดงผลแถบเลือกแผ่นงาน (Sheet Selector)
 if 'item_sheets_dict' in st.session_state:
     sheets_data = st.session_state['item_sheets_dict']
     all_sheets = list(sheets_data.keys())
@@ -36,7 +35,7 @@ if 'item_sheets_dict' in st.session_state:
     if "item_sheet_choice" in st.session_state and st.session_state["item_sheet_choice"] in all_sheets:
         default_index = all_sheets.index(st.session_state["item_sheet_choice"])
     else:
-        default_index = 0  # หน้า Item Master ตั้งต้นที่ Sheet แรกสุด
+        default_index = 0
         if len(all_sheets) > 0:
             st.session_state["item_sheet_choice"] = all_sheets[0]
             
@@ -52,9 +51,9 @@ elif 'df_item' in st.session_state:
     df = st.session_state['df_item']
     st.info("ℹ️ ตรวจพบเป็นข้อมูลจากไฟล์เดี่ยว (.csv) ระบบดึงข้อมูลแผ่นงานหลักมาใช้งานโดยอัตโนมัติ")
 else:
-    st.warning("⚠️ ยังไม่มีข้อมูลในระบบ กรุณากลับไปอัปโหลดไฟล์ที่หน้าหลัก (app.py) ก่อนเริ่มใช้งาน")
+    st.warning("⚠️ ยังไม่มีข้อมูลในระบบ กรุณากลับไปอัปโหลดไฟล์ในช่อง '2. อัปโหลดไฟล์ Item Master' ที่หน้าหลักก่อนเริ่มใช้งาน")
 
-# 3. ส่วนการคำนวณและดึงข้อมูลมา Mapping คอลัมน์
+# ส่วนจัดการและจัดสรรข้อมูล (Mapping)
 if df is not None:
     cleaned_df = df.dropna(how='all').reset_index(drop=True)
     
@@ -66,18 +65,14 @@ if df is not None:
     if cleaned_df.empty:
         st.warning("⚠️ พบข้อมูลในระบบ แต่ไม่มีรายการข้อมูลในแผ่นงานนี้ (0 แถว)")
     else:
-        # ใช้ Vectorized หาจุดตัดแถวหัวตารางอัตโนมัติ ป้องกัน Text ผิดพลาด
         keywords = ['รายการ', 'วันที่', 'Date', 'Received', 'Item']
         mask = cleaned_df.astype(str).apply(lambda row: row.str.contains('|'.join(keywords)).any(), axis=1)
         start_row = mask.idxmax() if mask.any() else 0
         
-        # ตัดข้อมูลตั้งแต่แถวที่เจอหัวตารางเป็นต้นไป
         working_df = cleaned_df.iloc[start_row:].reset_index(drop=True)
-        
         mapped_df = pd.DataFrame()
         total_cols = len(working_df.columns)
         
-        # จับคู่คอลัมน์ตามโครงสร้างเดิมของคุณอย่างแม่นยำ (อิงตาม Index)
         if total_cols > 0: mapped_df['Date'] = working_df.iloc[:, 0]
         if total_cols > 2: mapped_df['Received_From'] = working_df.iloc[:, 2]
         if total_cols > 3: mapped_df['Item_Description'] = working_df.iloc[:, 3]
@@ -88,18 +83,15 @@ if df is not None:
         if total_cols > 10: mapped_df['PO_Number'] = working_df.iloc[:, 10]
         if total_cols > 11: mapped_df['Remarks'] = working_df.iloc[:, 11]
 
-        # 🧼 ล้างข้อมูลแถวหัวตารางหรือแถวที่มีช่องว่าง (ตรรกะเดิมของคุณ)
         if 'Item_Description' in mapped_df.columns:
             mapped_df = mapped_df.dropna(subset=['Item_Description'], how='all')
             mapped_df = mapped_df[~mapped_df['Item_Description'].astype(str).str.contains('รายการ|วันที่', na=False)]
         
         mapped_df = mapped_df.reset_index(drop=True)
 
-        # แสดงผลตารางที่คลีนเสร็จแล้ว
         st.dataframe(mapped_df, use_container_width=True)
         st.success(f"✅ จัดสรรข้อมูลเสร็จสิ้น: ดึงข้อมูลมาครบทุกคอลัมน์รวมทั้งหมด {len(mapped_df)} รายการ")
         
-        # ปุ่มดาวน์โหลดไฟล์ (.csv) พร้อม BOM ป้องกันภาษาไทยเพี้ยน
         csv = mapped_df.to_csv(index=False).encode('utf-8-sig')
         st.download_button(
             label="📥 ดาวน์โหลดไฟล์สำหรับ ERP (.csv)",
