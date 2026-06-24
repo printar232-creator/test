@@ -5,14 +5,14 @@ import io
 st.set_page_config(page_title="G/L Balances Module", page_icon="💰", layout="wide")
 st.title("🧾 Module: สมุดบัญชีแยกประเภทและยอดหมุนเวียน (G/L Balances)")
 
-# 1. ตรวจสอบว่ามีไฟล์ดิบหลงเหลืออยู่ใน Session (จากคีย์ upload_g ในหน้าหลัก)
-if 'upload_g' in st.session_state and st.session_state['upload_g'] is not None:
-    file_gl_raw = st.session_state['upload_g']
+# 1. แก้ไขคีย์: ดึงไฟล์ดิบจากคีย์ 'gl_upload_file' ที่ถูกบันทึกมาจากหน้าหลัก (app.py)
+if 'gl_upload_file' in st.session_state and st.session_state['gl_upload_file'] is not None:
+    file_gl_raw = st.session_state['gl_upload_file']
     
     # เช็คว่าเป็นไฟล์ Excel หรือไม่ เพื่อทำการดึงแผ่นงาน
     if hasattr(file_gl_raw, 'name') and file_gl_raw.name.endswith(('.xlsx', '.xls')):
         
-        # 2. เลียนแบบ Logic: ถ้าหน้านี้ยังไม่เคยแกะข้อมูลแผ่นงาน ให้แกะอัตโนมัติรอบแรกก่อน
+        # 2. ถ้าหน้านี้ยังไม่เคยแกะข้อมูลแผ่นงาน ให้แกะอัตโนมัติรอบแรกก่อน
         if 'gl_sheets_dict' not in st.session_state:
             try:
                 # รีเซ็ต pointer ของไฟล์ก่อนอ่าน
@@ -23,14 +23,14 @@ if 'upload_g' in st.session_state and st.session_state['upload_g'] is not None:
                 # อ่านทุก Sheet เก็บไว้เป็น Dictionary เพื่อความเร็วตอนเปลี่ยนหน้า
                 st.session_state['gl_sheets_dict'] = pd.read_excel(
                     io.BytesIO(file_bytes), 
-                    sheet_name=None, # None หมายถึงอ่านทุก Sheet มาพร้อมกัน
+                    sheet_name=None, # อ่านทุก Sheet มาพร้อมกัน
                     header=None, 
                     engine=selected_engine
                 )
             except Exception as e:
                 st.error(f"❌ ไม่สามารถดึงโครงสร้างแผ่นงานได้: {e}")
 
-# 3. ส่วนการแสดงผล (ดึงข้อมูลจากความจำเฉพาะหน้านี้ สลับหน้าแล้วข้อมูลและสเตทการเลือก Sheet ไม่หาย)
+# 3. ส่วนการแสดงผล (ดึงข้อมูลจากความจำเฉพาะหน้านี้)
 if 'gl_sheets_dict' in st.session_state:
     sheets_data = st.session_state['gl_sheets_dict']
     all_sheets = list(sheets_data.keys())
@@ -38,13 +38,17 @@ if 'gl_sheets_dict' in st.session_state:
     st.markdown("---")
     st.markdown("### 🔍 ตรวจพบแผ่นงานในไฟล์ของคุณ")
     
-    # ตั้งค่าเริ่มต้นให้ชี้ไปที่ Sheet ลำดับที่ 2 (index=1) เสมอตอนเปิดมาครั้งแรก
+    # 🟢 ปรับปรุง Logic: ตั้งค่าเริ่มต้นให้ชี้ไปที่ Sheet ลำดับที่ 2 (index=1) เสมอตอนเปิดมาครั้งแรก
     if "gl_sheet_choice" in st.session_state and st.session_state["gl_sheet_choice"] in all_sheets:
         default_index = all_sheets.index(st.session_state["gl_sheet_choice"])
     else:
+        # หากมีมากกว่า 1 แผ่นงาน ให้เลือกแผ่นงานที่ 2 (index=1) ทันที ถ้าไม่มีให้เลือกแผ่นแรก (index=0)
         default_index = 1 if len(all_sheets) > 1 else 0
+        if len(all_sheets) > 1:
+            # ล็อกค่าแผ่นงานที่ 2 ลง Session State เพื่อให้โค้ดส่วนถัดไปดึงข้อมูลไปใช้ได้ถูกต้องในครั้งแรก
+            st.session_state["gl_sheet_choice"] = all_sheets[1]
 
-    # บังคับล็อกสถานะเมนูเลือก Sheet ด้วยคีย์เฉพาะหน้า
+    # เมนูเลือก Sheet (จะแสดงค่าเริ่มต้นเป็นแผ่นงานที่ 2 โดยอัตโนมัติ)
     selected_sheet = st.selectbox(
         "กรุณาเลือกแผ่นงาน (Sheet) ที่ถูกต้องสำหรับหน้าสมุดบัญชีแยกประเภท:",
         options=all_sheets,
@@ -52,7 +56,7 @@ if 'gl_sheets_dict' in st.session_state:
         key="gl_sheet_choice"
     )
     
-    # ดึง DataFrame จาก Dictionary ตาม Sheet ที่เลือก (ไม่ต้องโหลดไฟล์ซ้ำอีกรอบ)
+    # ดึง DataFrame ตาม Sheet ที่เลือก (หากเปิดมาครั้งแรก จะดึงแผ่นงานที่ 2 มาทำงานทันที)
     df = sheets_data[selected_sheet]
     st.success(f"📋 ดึงข้อมูลจากแผ่นงาน: **'{selected_sheet}'** สำเร็จ")
 
@@ -64,7 +68,7 @@ else:
     df = None
     st.warning("⚠️ ไม่พบข้อมูลในระบบ กรุณาอัปโหลดไฟล์ที่หน้าหลัก (app.py) ก่อนเริ่มใช้งาน")
 
-# --- ส่วนการคำนวณและจัดสรรข้อมูลบัญชี (คงโครงสร้างเดิมเพื่อให้ระบบเสถียร) ---
+# --- ส่วนการคำนวณและจัดสรรข้อมูลบัญชี (คงโครงสร้างเดิมที่มีประสิทธิภาพไว้) ---
 if df is not None:
     st.subheader("📋 ข้อมูลดิบที่ระบบอ่านได้ในปัจจุบัน")
     st.dataframe(df, use_container_width=True)
